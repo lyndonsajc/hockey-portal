@@ -129,4 +129,370 @@
       background: white;
       border: 1px solid var(--border);
       border-radius: 18px;
-      padding:
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .date {
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--blue);
+    }
+
+    .day {
+      background: var(--light-blue);
+      color: var(--blue);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 8px;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+
+    .info span:first-child {
+      color: #6b7280;
+      font-weight: bold;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #fff7df;
+      color: #7a5200;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      border-top: 1px solid #eeeeee;
+      padding-top: 14px;
+    }
+
+    .small-btn {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      background: white;
+      color: var(--blue);
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .small-btn:hover { background: var(--light-blue); }
+
+    .empty, .loading, .error {
+      background: white;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      text-align: center;
+      color: #6b7280;
+    }
+
+    .error {
+      border-color: #fca5a5;
+      color: #991b1b;
+      background: #fff5f5;
+    }
+
+    details {
+      margin-top: 10px;
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      color: var(--blue);
+    }
+
+    @media (max-width: 760px) {
+      header h1 { font-size: 28px; }
+      .toolbar { grid-template-columns: 1fr; }
+      .term-title { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hockey Team Schedule 2026</h1>
+    <p>Live training schedule synced from Google Sheets</p>
+  </header>
+
+  <main class="container">
+    <div class="notice">
+      <strong>Reminder:</strong> Please check this page regularly for training updates, venue changes and reporting details.
+    </div>
+
+    <section class="toolbar">
+      <div>
+        <label for="termFilter">Term</label>
+        <select id="termFilter"><option value="all">All Terms</option></select>
+      </div>
+
+      <div>
+        <label for="venueFilter">Venue</label>
+        <select id="venueFilter"><option value="all">All Venues</option></select>
+      </div>
+
+      <div>
+        <label for="dayFilter">Day</label>
+        <select id="dayFilter"><option value="all">All Days</option></select>
+      </div>
+
+      <div>
+        <label for="searchInput">Search</label>
+        <input id="searchInput" type="text" placeholder="Search date, coach, venue..." />
+      </div>
+    </section>
+
+    <div class="quick-actions">
+      <a class="btn" href="attendance.html">✅ Take Attendance</a>
+      <a class="btn secondary" href="https://calendar.google.com" target="_blank">📅 Team Calendar</a>
+      <button class="btn secondary" onclick="loadSchedule()">🔄 Refresh</button>
+      <button class="btn secondary" onclick="window.print()">🖨 Print Schedule</button>
+    </div>
+
+    <section id="scheduleContainer"><div class="loading">Loading schedule from Google Sheets...</div></section>
+  </main>
+
+  <script>
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSgPad39-SE3-ELAHaJARdviGjjYtr12Uzex9LVCcjxIqBJCfQn8qIHMDyPLndkW6U4RHRMGvHTIPXp/pub?output=csv";
+
+    let schedule = [];
+
+    const fallbackMapLinks = {
+      "PSOEB": "https://www.google.com/maps/search/?api=1&query=PSOEB",
+      "Sengkang": "https://www.google.com/maps/search/?api=1&query=Sengkang+Hockey+Pitch",
+      "School": "https://www.google.com/maps/search/?api=1&query=St+Andrew's+Junior+College"
+    };
+
+    function csvToRows(text) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let insideQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && insideQuotes && next === '"') {
+          cell += '"';
+          i++;
+        } else if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === ',' && !insideQuotes) {
+          row.push(cell.trim());
+          cell = "";
+        } else if ((char === '\n' || char === '\r') && !insideQuotes) {
+          if (cell || row.length) {
+            row.push(cell.trim());
+            rows.push(row);
+            row = [];
+            cell = "";
+          }
+          if (char === '\r' && next === '\n') i++;
+        } else {
+          cell += char;
+        }
+      }
+
+      if (cell || row.length) {
+        row.push(cell.trim());
+        rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function normaliseHeader(header) {
+      return header.toLowerCase().replace(/\s+/g, "");
+    }
+
+    function rowsToObjects(rows) {
+      const headers = rows[0].map(normaliseHeader);
+      return rows.slice(1)
+        .filter(row => row.some(cell => cell.trim() !== ""))
+        .map(row => {
+          const obj = {};
+          headers.forEach((header, index) => obj[header] = row[index] || "");
+          return {
+            term: obj.term || "",
+            date: obj.date || "",
+            day: obj.day || "",
+            start: obj.start || obj.starttime || "",
+            end: obj.end || obj.endtime || "",
+            venue: obj.venue || "",
+            remarks: obj.remarks || "",
+            coach: obj.coach || "",
+            tic: obj.tic || "",
+            mapLink: obj.maplink || "",
+            attendanceLink: obj.attendancelink || ""
+          };
+        });
+    }
+
+    async function loadSchedule() {
+      const container = document.getElementById("scheduleContainer");
+      container.innerHTML = `<div class="loading">Loading schedule from Google Sheets...</div>`;
+
+      try {
+        const response = await fetch(GOOGLE_SHEET_CSV_URL + "&cachebust=" + Date.now());
+        if (!response.ok) throw new Error("Could not load Google Sheet.");
+
+        const csvText = await response.text();
+        const rows = csvToRows(csvText);
+        schedule = rowsToObjects(rows);
+
+        updateFilters();
+        renderSchedule();
+      } catch (error) {
+        container.innerHTML = `<div class="error">Unable to load schedule. Check that your Google Sheet is published to web as CSV.</div>`;
+      }
+    }
+
+    function updateFilters() {
+      populateFilter("termFilter", schedule.map(item => item.term).filter(Boolean), "All Terms");
+      populateFilter("venueFilter", schedule.map(item => item.venue).filter(Boolean), "All Venues");
+      populateFilter("dayFilter", schedule.map(item => item.day).filter(Boolean), "All Days");
+    }
+
+    function populateFilter(id, values, defaultText) {
+      const select = document.getElementById(id);
+      const currentValue = select.value;
+      const uniqueValues = [...new Set(values)].sort();
+      select.innerHTML = `<option value="all">${defaultText}</option>` +
+        uniqueValues.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+      if ([...select.options].some(option => option.value === currentValue)) select.value = currentValue;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function makeMapLink(item) {
+      return item.mapLink || fallbackMapLinks[item.venue] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.venue)}`;
+    }
+
+    function parseDate(dateText) {
+      const [day, month] = dateText.split("-");
+      const months = {
+        Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
+        Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12"
+      };
+      return `2026${months[month]}${day.padStart(2, "0")}`;
+    }
+
+    function makeCalendarLink(item) {
+      const startDate = parseDate(item.date);
+      const start = `${startDate}T${item.start}00`;
+      const end = `${startDate}T${item.end}00`;
+      const title = encodeURIComponent(`Hockey ${item.remarks || "Training"}`);
+      const location = encodeURIComponent(item.venue);
+      const details = encodeURIComponent(`Coach: ${item.coach || "TBC"}\nTIC: ${item.tic || "TBC"}`);
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${location}&details=${details}`;
+    }
+
+    function renderSchedule() {
+      const termValue = document.getElementById("termFilter").value;
+      const venueValue = document.getElementById("venueFilter").value;
+      const dayValue = document.getElementById("dayFilter").value;
+      const searchValue = document.getElementById("searchInput").value.toLowerCase();
+
+      const filtered = schedule.filter(item => {
+        const text = Object.values(item).join(" ").toLowerCase();
+        return (termValue === "all" || item.term === termValue) &&
+               (venueValue === "all" || item.venue === venueValue) &&
+               (dayValue === "all" || item.day === dayValue) &&
+               text.includes(searchValue);
+      });
+
+      const grouped = filtered.reduce((acc, item) => {
+        const term = item.term || "Schedule";
+        if (!acc[term]) acc[term] = [];
+        acc[term].push(item);
+        return acc;
+      }, {});
+
+      const container = document.getElementById("scheduleContainer");
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty">No schedule found. Try changing the filters.</div>`;
+        return;
+      }
+
+      container.innerHTML = Object.keys(grouped).map(term => `
+        <h2 class="term-title">${escapeHtml(term)}</h2>
+        <div class="schedule-grid">
+          ${grouped[term].map(item => `
+            <article class="card">
+              <div class="card-top">
+                <div>
+                  <div class="date">${escapeHtml(item.date)}</div>
+                  <span class="tag">${escapeHtml(item.start)}–${escapeHtml(item.end)}</span>
+                </div>
+                <div class="day">${escapeHtml(item.day)}</div>
+              </div>
+
+              <div class="info"><span>Venue</span><span>${escapeHtml(item.venue)}</span></div>
+              <div class="info"><span>Remarks</span><span>${escapeHtml(item.remarks || "Training")}</span></div>
+              <div class="info"><span>Coach</span><span>${escapeHtml(item.coach || "TBC")}</span></div>
+              <div class="info"><span>TIC</span><span>${escapeHtml(item.tic || "TBC")}</span></div>
+
+              <details>
+                <summary>Training reminders</summary>
+                <p>Bring stick, shin guards, water bottle and proper training attire. Please inform the TIC early if you are unable to attend.</p>
+              </details>
+
+              <div class="card-actions">
+                <a class="small-btn" href="${makeMapLink(item)}" target="_blank">📍 Map</a>
+                <a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">📅 Add</a>
+                <a class="small-btn" href="attendance.html">✅ Attendance</a>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      `).join("");
+    }
+
+    document.getElementById("termFilter").addEventListener("change", renderSchedule);
+    document.getElementById("venueFilter").addEventListener("change", renderSchedule);
+    document.getElementById("dayFilter").addEventListener("change", renderSchedule);
+    document.getElementById("searchInput").addEventListener("input", renderSchedule);
+
+    loadSchedule();
+  </script>
+</body>
+</html>
