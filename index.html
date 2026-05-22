@@ -3,22 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hockey Attendance Dashboard</title>
+  <title>Hockey Team Schedule</title>
   <style>
     :root {
       --blue: #123c69;
       --blue2: #1f5f99;
       --light-blue: #e8f1fb;
-      --green: #15803d;
-      --green-bg: #dcfce7;
-      --yellow: #a16207;
-      --yellow-bg: #fef9c3;
-      --red: #b91c1c;
-      --red-bg: #fee2e2;
-      --purple: #6d28d9;
-      --purple-bg: #ede9fe;
-      --border: #d1d5db;
+      --gold: #f6c453;
       --dark: #1f2937;
+      --border: #d1d5db;
     }
 
     * { box-sizing: border-box; }
@@ -33,625 +26,107 @@
     header {
       background: linear-gradient(135deg, var(--blue), var(--blue2));
       color: white;
-      padding: 28px 18px;
+      padding: 32px 20px;
       text-align: center;
     }
 
     header h1 {
       margin: 0;
-      font-size: 30px;
+      font-size: 34px;
     }
 
     header p {
-      margin: 8px 0 0;
+      margin: 10px 0 0;
+      font-size: 16px;
       opacity: 0.95;
     }
 
     .container {
-      max-width: 1150px;
-      margin: 20px auto;
-      padding: 0 14px 40px;
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px 40px;
     }
 
-    .panel {
+    .notice {
+      background: #fff7df;
+      border-left: 5px solid var(--gold);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      font-size: 14px;
+    }
+
+    .toolbar {
       background: white;
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 16px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-      margin-bottom: 16px;
-    }
-
-    .setup-note {
-      background: #fff7df;
-      border-left: 5px solid #f6c453;
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 14px;
-      margin-bottom: 16px;
-    }
-
-    .controls {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
+      margin-bottom: 22px;
     }
 
     label {
-      display: block;
       font-size: 12px;
       font-weight: bold;
       color: #4b5563;
+      display: block;
       margin-bottom: 6px;
     }
 
-    input, select {
+    select, input {
       width: 100%;
-      padding: 12px;
+      padding: 11px 12px;
       border: 1px solid var(--border);
       border-radius: 12px;
-      font-size: 15px;
+      font-size: 14px;
       background: white;
     }
 
-    .mode-row {
+    .quick-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 14px;
+      margin-bottom: 20px;
     }
 
-    .mode-btn, .main-btn {
-      border: 1px solid var(--border);
+    .btn {
+      border: none;
       border-radius: 999px;
       padding: 10px 14px;
+      background: var(--blue);
+      color: white;
       font-weight: bold;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .btn.secondary {
       background: white;
+      color: var(--blue);
+      border: 1px solid var(--border);
+    }
+
+    .term-title {
+      margin: 30px 0 12px;
+      font-size: 28px;
       color: var(--blue);
     }
 
-    .mode-btn.active, .main-btn.primary {
-      background: var(--blue);
-      color: white;
-      border-color: var(--blue);
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .summary-card {
-      border-radius: 16px;
-      padding: 14px;
-      text-align: center;
-      border: 1px solid var(--border);
-      background: white;
-    }
-
-    .summary-card .number {
-      font-size: 30px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .summary-card .label {
-      font-size: 13px;
-      color: #4b5563;
-      font-weight: bold;
-    }
-
-    .present { background: var(--green-bg); color: var(--green); }
-    .late { background: var(--yellow-bg); color: var(--yellow); }
-    .absent { background: var(--red-bg); color: var(--red); }
-    .mc { background: var(--purple-bg); color: var(--purple); }
-
-    .student-grid {
+    .schedule-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 14px;
+      gap: 16px;
     }
 
-    .student-card {
+    .card {
       background: white;
       border: 1px solid var(--border);
       border-radius: 18px;
-      padding: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-    }
-
-    .student-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: flex-start;
-      margin-bottom: 12px;
-    }
-
-    .name {
-      font-size: 20px;
-      font-weight: bold;
-      color: var(--blue);
-    }
-
-    .meta {
-      margin-top: 4px;
-      color: #6b7280;
-      font-size: 13px;
-    }
-
-    .status-pill {
-      border-radius: 999px;
-      padding: 7px 10px;
-      font-size: 12px;
-      font-weight: bold;
-      white-space: nowrap;
-      background: #f3f4f6;
-      color: #374151;
-    }
-
-    .button-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .att-btn {
-      border: none;
-      border-radius: 14px;
-      padding: 14px 8px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .att-btn.present { background: var(--green-bg); color: var(--green); }
-    .att-btn.late { background: var(--yellow-bg); color: var(--yellow); }
-    .att-btn.absent { background: var(--red-bg); color: var(--red); }
-    .att-btn.mc { background: var(--purple-bg); color: var(--purple); }
-    .att-btn:active { transform: scale(0.97); }
-
-    .timestamp {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #6b7280;
-    }
-
-    .self-checkin { display: none; }
-    .self-checkin.show { display: block; }
-    .teacher-view.hide { display: none; }
-
-    .big-self-buttons {
-      display: grid;
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .big-self-buttons button {
-      min-height: 58px;
-      font-size: 18px;
-    }
-
-    .footer-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .loading, .empty, .error {
-      background: white;
-      border: 1px dashed var(--border);
-      border-radius: 16px;
-      padding: 22px;
-      text-align: center;
-      color: #6b7280;
-    }
-
-    .error {
-      border-color: #fca5a5;
-      color: #991b1b;
-      background: #fff5f5;
-    }
-
-    @media (max-width: 760px) {
-      header h1 { font-size: 25px; }
-      .controls { grid-template-columns: 1fr; }
-      .summary-grid { grid-template-columns: repeat(2, 1fr); }
-      .summary-grid .summary-card:first-child { grid-column: span 2; }
-      .button-grid { grid-template-columns: 1fr 1fr; }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Hockey Attendance Dashboard</h1>
-    <p>Teacher-controlled buttons + optional student self check-in</p>
-  </header>
-
-  <main class="container">
-    <div class="setup-note">
-      <strong>Recommended use:</strong> Teacher mode for official attendance. Student mode can be used for quick self check-in, but final verification should remain teacher-controlled.
-    </div>
-
-    <section class="panel">
-      <div class="controls">
-        <div>
-          <label for="sessionDate">Session Date</label>
-          <input id="sessionDate" type="date" />
-        </div>
-        <div>
-          <label for="sessionName">Session</label>
-          <select id="sessionName">
-            <option>Wednesday Training</option>
-            <option>Friday Training</option>
-            <option>Match Day</option>
-            <option>Fitness Session</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div>
-          <label for="groupFilter">Group</label>
-          <select id="groupFilter"><option value="all">All Groups</option></select>
-        </div>
-        <div>
-          <label for="searchInput">Search Student</label>
-          <input id="searchInput" type="text" placeholder="Type name or class..." />
-        </div>
-      </div>
-
-      <div class="mode-row">
-        <button id="teacherModeBtn" class="mode-btn active" onclick="setMode('teacher')">👨‍🏫 Teacher Mode</button>
-        <button id="studentModeBtn" class="mode-btn" onclick="setMode('student')">📱 Student Self Check-In</button>
-        <button class="mode-btn" onclick="loadStudents()">🔄 Refresh Name List</button>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="summary-grid">
-        <div class="summary-card">
-          <div id="totalCount" class="number">0</div>
-          <div class="label">Total</div>
-        </div>
-        <div class="summary-card present">
-          <div id="presentCount" class="number">0</div>
-          <div class="label">Present</div>
-        </div>
-        <div class="summary-card late">
-          <div id="lateCount" class="number">0</div>
-          <div class="label">Late</div>
-        </div>
-        <div class="summary-card absent">
-          <div id="absentCount" class="number">0</div>
-          <div class="label">Absent</div>
-        </div>
-        <div class="summary-card mc">
-          <div id="mcCount" class="number">0</div>
-          <div class="label">MC / Excused</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="teacherView" class="teacher-view">
-      <div id="studentContainer" class="student-grid">
-        <div class="loading">Loading student list from Google Sheets...</div>
-      </div>
-    </section>
-
-    <section id="studentView" class="self-checkin panel self-checkin">
-      <h2 style="margin-top:0;color:var(--blue);">Student Self Check-In</h2>
-      <p style="color:#6b7280;">Students select their name, then tap one large button. This records a timestamp.</p>
-      <div class="controls" style="grid-template-columns:1fr;">
-        <div>
-          <label for="studentSelect">Student Name</label>
-          <select id="studentSelect"></select>
-        </div>
-      </div>
-      <div class="big-self-buttons">
-        <button class="att-btn present" onclick="studentSelfSubmit('Present')">✅ I am Present</button>
-        <button class="att-btn late" onclick="studentSelfSubmit('Late')">⏰ I am Late</button>
-        <button class="att-btn mc" onclick="studentSelfSubmit('MC')">🏥 MC / Excused</button>
-      </div>
-    </section>
-
-    <div class="footer-actions">
-      <button class="main-btn primary" onclick="downloadCsv()">⬇ Download Today’s CSV</button>
-      <button class="main-btn" onclick="clearLocalAttendance()">🧹 Clear Local Marks</button>
-    </div>
-  </main>
-
-  <script>
-    const STUDENT_LIST_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSgPad39-SE3-ELAHaJARdviGjjYtr12Uzex9LVCcjxIqBJCfQn8qIHMDyPLndkW6U4RHRMGvHTIPXp/pub?output=csv";
-
-    const GOOGLE_APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcgoxIGJwdrI9QhKRBKSKCtZNLBPMoGcLB945nsw5kRPDOLDxaNGIid3EiSU1CYavhWA/exec";
-
-    let students = [];
-    let attendance = {};
-
-    const demoStudents = [
-      { name: "Adam Tan", className: "25A01", group: "J1", jersey: "" },
-      { name: "Cayla Goh", className: "25A02", group: "J1", jersey: "" },
-      { name: "Cyrus Ng", className: "25A03", group: "J1", jersey: "" }
-    ];
-
-    function todayIsoDate() {
-      const now = new Date();
-      const offset = now.getTimezoneOffset();
-      const local = new Date(now.getTime() - offset * 60000);
-      return local.toISOString().slice(0, 10);
-    }
-
-    document.getElementById("sessionDate").value = todayIsoDate();
-
-    function csvToRows(text) {
-      const rows = [];
-      let row = [];
-      let cell = "";
-      let insideQuotes = false;
-
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const next = text[i + 1];
-        if (char === '"' && insideQuotes && next === '"') {
-          cell += '"';
-          i++;
-        } else if (char === '"') {
-          insideQuotes = !insideQuotes;
-        } else if (char === ',' && !insideQuotes) {
-          row.push(cell.trim());
-          cell = "";
-        } else if ((char === '\n' || char === '\r') && !insideQuotes) {
-          if (cell || row.length) {
-            row.push(cell.trim());
-            rows.push(row);
-            row = [];
-            cell = "";
-          }
-          if (char === '\r' && next === '\n') i++;
-        } else {
-          cell += char;
-        }
-      }
-      if (cell || row.length) {
-        row.push(cell.trim());
-        rows.push(row);
-      }
-      return rows;
-    }
-
-    function normaliseHeader(header) {
-      return header.toLowerCase().replace(/\s+/g, "");
-    }
-
-    function rowsToStudentObjects(rows) {
-      const headers = rows[0].map(normaliseHeader);
-      return rows.slice(1)
-        .filter(row => row.some(cell => cell.trim() !== ""))
-        .map(row => {
-          const obj = {};
-          headers.forEach((header, index) => obj[header] = row[index] || "");
-          return {
-            name: obj.name || obj.studentname || "",
-            className: obj.class || obj.classname || "",
-            group: obj.group || obj.team || "",
-            jersey: obj.jersey || obj.jerseyno || "",
-            parentContact: obj.parentcontact || ""
-          };
-        })
-        .filter(student => student.name);
-    }
-
-    async function loadStudents() {
-      const container = document.getElementById("studentContainer");
-      container.innerHTML = `<div class="loading">Loading student list from Google Sheets...</div>`;
-
-      try {
-        const response = await fetch(STUDENT_LIST_CSV_URL + "&cachebust=" + Date.now());
-        if (!response.ok) throw new Error("Could not load student list.");
-        const csvText = await response.text();
-        const parsed = rowsToStudentObjects(csvToRows(csvText));
-        students = parsed.length ? parsed : demoStudents;
-
-        loadLocalAttendance();
-        updateGroupFilter();
-        updateStudentSelect();
-        renderStudents();
-        updateSummary();
-      } catch (error) {
-        students = demoStudents;
-        loadLocalAttendance();
-        updateGroupFilter();
-        updateStudentSelect();
-        renderStudents();
-        updateSummary();
-      }
-    }
-
-    function updateGroupFilter() {
-      const select = document.getElementById("groupFilter");
-      const current = select.value;
-      const groups = [...new Set(students.map(s => s.group).filter(Boolean))].sort();
-      select.innerHTML = `<option value="all">All Groups</option>` + groups.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
-      if ([...select.options].some(o => o.value === current)) select.value = current;
-    }
-
-    function updateStudentSelect() {
-      const select = document.getElementById("studentSelect");
-      select.innerHTML = students.map((s, index) => `<option value="${index}">${escapeHtml(s.name)} ${s.className ? "(" + escapeHtml(s.className) + ")" : ""}</option>`).join("");
-    }
-
-    function escapeHtml(text) {
-      return String(text)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function getSessionKey() {
-      return `${document.getElementById("sessionDate").value}_${document.getElementById("sessionName").value}`;
-    }
-
-    function getStudentKey(student) {
-      return `${student.name}_${student.className}_${student.group}`;
-    }
-
-    function loadLocalAttendance() {
-      const saved = localStorage.getItem("hockeyAttendance_" + getSessionKey());
-      attendance = saved ? JSON.parse(saved) : {};
-    }
-
-    function saveLocalAttendance() {
-      localStorage.setItem("hockeyAttendance_" + getSessionKey(), JSON.stringify(attendance));
-    }
-
-    function markAttendance(studentIndex, status, mode = "Teacher") {
-      const student = students[studentIndex];
-      const key = getStudentKey(student);
-      const timestamp = new Date().toLocaleString("en-SG", { hour12: false });
-
-      attendance[key] = { status, timestamp, mode, student };
-      saveLocalAttendance();
-      renderStudents();
-      updateSummary();
-      submitToGoogleSheet(student, status, mode, timestamp);
-    }
-
-    async function submitToGoogleSheet(student, status, mode, timestamp) {
-      const payload = {
-        timestamp,
-        date: document.getElementById("sessionDate").value,
-        session: document.getElementById("sessionName").value,
-        name: student.name,
-        className: student.className,
-        group: student.group,
-        status,
-        mode,
-        markedBy: mode === "Teacher" ? "Teacher" : student.name
-      };
-
-      try {
-        await fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-      } catch (error) {
-        console.log("Could not submit to Google Sheet", error);
-      }
-    }
-
-    function renderStudents() {
-      const container = document.getElementById("studentContainer");
-      const groupValue = document.getElementById("groupFilter").value;
-      const searchValue = document.getElementById("searchInput").value.toLowerCase();
-
-      const filtered = students.filter(student => {
-        const text = `${student.name} ${student.className} ${student.group} ${student.jersey}`.toLowerCase();
-        return (groupValue === "all" || student.group === groupValue) && text.includes(searchValue);
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="empty">No students found.</div>`;
-        return;
-      }
-
-      container.innerHTML = filtered.map(student => {
-        const index = students.indexOf(student);
-        const record = attendance[getStudentKey(student)];
-        const status = record ? record.status : "Unmarked";
-        const timestamp = record ? record.timestamp : "";
-        const statusClass = status.toLowerCase();
-
-        return `
-          <article class="student-card">
-            <div class="student-top">
-              <div>
-                <div class="name">${escapeHtml(student.name)}</div>
-                <div class="meta">${escapeHtml(student.className || "No class")} ${student.group ? "• " + escapeHtml(student.group) : ""} ${student.jersey ? "• #" + escapeHtml(student.jersey) : ""}</div>
-              </div>
-              <div class="status-pill ${statusClass}">${escapeHtml(status)}</div>
-            </div>
-
-            <div class="button-grid">
-              <button class="att-btn present" onclick="markAttendance(${index}, 'Present')">✅ Present</button>
-              <button class="att-btn late" onclick="markAttendance(${index}, 'Late')">⏰ Late</button>
-              <button class="att-btn absent" onclick="markAttendance(${index}, 'Absent')">❌ Absent</button>
-              <button class="att-btn mc" onclick="markAttendance(${index}, 'MC')">🏥 MC</button>
-            </div>
-            <div class="timestamp">${timestamp ? "Last marked: " + escapeHtml(timestamp) : "Not marked yet"}</div>
-          </article>
-        `;
-      }).join("");
-    }
-
-    function updateSummary() {
-      const records = Object.values(attendance);
-      document.getElementById("totalCount").textContent = students.length;
-      document.getElementById("presentCount").textContent = records.filter(r => r.status === "Present").length;
-      document.getElementById("lateCount").textContent = records.filter(r => r.status === "Late").length;
-      document.getElementById("absentCount").textContent = records.filter(r => r.status === "Absent").length;
-      document.getElementById("mcCount").textContent = records.filter(r => r.status === "MC").length;
-    }
-
-    function setMode(mode) {
-      document.getElementById("teacherModeBtn").classList.toggle("active", mode === "teacher");
-      document.getElementById("studentModeBtn").classList.toggle("active", mode === "student");
-      document.getElementById("teacherView").classList.toggle("hide", mode !== "teacher");
-      document.getElementById("studentView").classList.toggle("show", mode === "student");
-    }
-
-    function studentSelfSubmit(status) {
-      const index = Number(document.getElementById("studentSelect").value);
-      markAttendance(index, status, "Student Self Check-In");
-      alert("Attendance submitted. Thank you.");
-    }
-
-    function downloadCsv() {
-      const rows = [["Date", "Session", "Name", "Class", "Group", "Status", "Timestamp", "Mode"]];
-      students.forEach(student => {
-        const record = attendance[getStudentKey(student)] || {};
-        rows.push([
-          document.getElementById("sessionDate").value,
-          document.getElementById("sessionName").value,
-          student.name,
-          student.className,
-          student.group,
-          record.status || "Unmarked",
-          record.timestamp || "",
-          record.mode || ""
-        ]);
-      });
-
-      const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `attendance_${document.getElementById("sessionDate").value}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function clearLocalAttendance() {
-      if (!confirm("Clear local marks for this session on this device?")) return;
-      attendance = {};
-      saveLocalAttendance();
-      renderStudents();
-      updateSummary();
-    }
-
-    document.getElementById("sessionDate").addEventListener("change", () => { loadLocalAttendance(); renderStudents(); updateSummary(); });
-    document.getElementById("sessionName").addEventListener("change", () => { loadLocalAttendance(); renderStudents(); updateSummary(); });
-    document.getElementById("groupFilter").addEventListener("change", renderStudents);
-    document.getElementById("searchInput").addEventListener("input", renderStudents);
-
-    loadStudents();
-  </script>
-</body>
-</html>
+      padding:
