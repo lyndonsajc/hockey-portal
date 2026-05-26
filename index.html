@@ -28,22 +28,10 @@
     <section id="scheduleContainer"><div class="loading">Loading schedule...</div></section>
   </main>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <script>
+    
 
-    // FIREBASE CONFIG
-    const firebaseConfig = {
-      apiKey: "PASTE_HERE",
-      authDomain: "PASTE_HERE",
-      projectId: "PASTE_HERE",
-      storageBucket: "PASTE_HERE",
-      messagingSenderId: "PASTE_HERE",
-      appId: "PASTE_HERE"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    
 
     // GOOGLE SHEETS CSV LINK
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1nH3Jvm1XFFqA52Sj7I0Swll9DU5yUOqv0ddr21zWEgw/export?format=csv&gid=0";
@@ -96,9 +84,47 @@
         const response = await fetch(SHEET_CSV_URL);
         const csvText = await response.text();
 
-        const rows = csvText.split("
-").map(r => r.split(","));
+        const rows = parseCSV(csvText);
         const headers = rows[0].map(h => h.trim());
+
+    function parseCSV(text){
+      const rows=[];
+      let row=[];
+      let cell="";
+      let quote=false;
+
+      for(let i=0;i<text.length;i++){
+        const c=text[i];
+        const n=text[i+1];
+
+        if(c==='\"' && quote && n==='\"'){
+          cell+='\"';
+          i++;
+        } else if(c==='\"'){
+          quote=!quote;
+        } else if(c===',' && !quote){
+          row.push(cell.trim());
+          cell='';
+        } else if((c==='\\n'||c==='\\r') && !quote){
+          if(cell || row.length){
+            row.push(cell.trim());
+            rows.push(row);
+            row=[];
+            cell='';
+          }
+          if(c==='\\r' && n==='\\n') i++;
+        } else {
+          cell+=c;
+        }
+      }
+
+      if(cell || row.length){
+        row.push(cell.trim());
+        rows.push(row);
+      }
+
+      return rows;
+    }
 
         schedule = rows.slice(1).filter(r => r.length > 1).map(row => {
           const obj = {};
