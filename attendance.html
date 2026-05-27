@@ -200,12 +200,50 @@
     absenceBox.innerHTML=absence.length?absence.map(s=>{const r=attendance[s.id]||{};return `<div>${escapeHtml(s.name)} <strong>(${escapeHtml(r.status||"")})</strong>${r.reason?" — "+escapeHtml(r.reason):""}</div>`}).join(""):"No one marked absent or MC/PL yet.";
   }
 
+  async function saveTeacherRecord(session, student, status, reason){
+    const recordId=`${session.id}_${student.id}`;
+    const payload={
+      sessionId:session.id,
+      sessionLabel:session.label,
+      date:session.date||"",
+      day:session.day||"",
+      start:session.start||"",
+      end:session.end||"",
+      venue:session.venue||"",
+      remarks:session.remarks||"",
+      studentId:student.id,
+      name:student.name,
+      className:student.className,
+      group:student.group,
+      gender:student.gender,
+      status,
+      reason,
+      updatedAt:new Date().toISOString(),
+      timestamp:serverTimestamp()
+    };
+    await setDoc(doc(db,"teacherAttendanceRecords",recordId),payload,{merge:true});
+    await setDoc(doc(db,"attendanceSessions",session.id),{
+      sessionId:session.id,
+      sessionLabel:session.label,
+      date:session.date||"",
+      day:session.day||"",
+      start:session.start||"",
+      end:session.end||"",
+      venue:session.venue||"",
+      remarks:session.remarks||"",
+      updatedAt:new Date().toISOString(),
+      timestamp:serverTimestamp()
+    },{merge:true});
+  }
+
   async function markAttendance(studentId,status){
     const session=selectedSession();
     const student=students.find(s=>s.id===studentId);
     if(!session||!student){alert("Select a valid session first.");return;}
     const reason=document.getElementById(`reason-${studentId}`)?.value||attendance[studentId]?.reason||"";
-    await setDoc(doc(db,"attendance",session.id,"records",studentId),{studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
+    const payload={studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()};
+    await setDoc(doc(db,"attendance",session.id,"records",studentId),payload,{merge:true});
+    await saveTeacherRecord(session,student,status,reason);
     attendance[studentId]={...(attendance[studentId]||{}),status,reason};
     updateSummary();
     renderStudents();
@@ -215,7 +253,10 @@
     const session=selectedSession();
     const student=students.find(s=>s.id===studentId);
     if(!session||!student)return;
-    await setDoc(doc(db,"attendance",session.id,"records",studentId),{studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status:attendance[studentId]?.status||"Unmarked",reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
+    const status=attendance[studentId]?.status||"Unmarked";
+    const payload={studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()};
+    await setDoc(doc(db,"attendance",session.id,"records",studentId),payload,{merge:true});
+    await saveTeacherRecord(session,student,status,reason);
     attendance[studentId]={...(attendance[studentId]||{}),reason};
     updateSummary();
   }
