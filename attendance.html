@@ -73,56 +73,14 @@
     appId: "1:717790587080:web:cd9e1a07d580566f3f1dfd"
   };
 
-  const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/1nH3Jvm1XFFqA52Sj7I0Swll9DU5yUOqv0ddr21zWEgw/export?format=csv&gid=0";
+  const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
+  const STUDENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=1879195237";
   const MC_PARENT_LETTER_UPLOAD_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSeWelhY6SsCrPo2g-GGByH33dAS0hx26AygKzQrtOgqWbay3A/viewform?usp=header";
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  let students = [
-    {id:"01",name:"Leonard Ong Teng Yong (Wang Dingrong)",className:"26A01",group:"Boys",gender:"M"},
-    {id:"02",name:"Lim Jiaxuan, Jessica Faith",className:"26A02",group:"Girls",gender:"F"},
-    {id:"03",name:"Ho Wen Jie",className:"26A03",group:"Boys",gender:"M"},
-    {id:"04",name:"Kan Wing, Lucien",className:"26A03",group:"Boys",gender:"M"},
-    {id:"05",name:"Lily Anne Timms",className:"26A03",group:"Girls",gender:"F"},
-    {id:"06",name:"Seeto Zhi Yuan, Benjamin",className:"26A03",group:"Boys",gender:"M"},
-    {id:"07",name:"Tay Yu Qin Jensen",className:"26A03",group:"Boys",gender:"M"},
-    {id:"08",name:"Ye Junhao",className:"26A04",group:"Boys",gender:"M"},
-    {id:"09",name:"Cherlize Agnes Loi Yu Jing",className:"26A05",group:"Girls",gender:"F"},
-    {id:"10",name:"Low Wei Min",className:"26A05",group:"Girls",gender:"F"},
-    {id:"11",name:"Chan Yu Qin, Sarah",className:"26A06",group:"Girls",gender:"F"},
-    {id:"12",name:"Ying Yin Ci",className:"26A06",group:"Girls",gender:"F"},
-    {id:"13",name:"Axton Lee Yun Heng",className:"26S01",group:"Boys",gender:"M"},
-    {id:"14",name:"Fan Zicheng",className:"26S01",group:"Boys",gender:"M"},
-    {id:"15",name:"Avril Natalie Tang Shuet Wing",className:"26S02",group:"Girls",gender:"F"},
-    {id:"16",name:"Raja Yogatheepan",className:"26S02",group:"Boys",gender:"M"},
-    {id:"17",name:"Aadit Ajay Wadkar",className:"26S03",group:"Boys",gender:"M"},
-    {id:"18",name:"Lavonne Teo Swee Hian (Zhang Ruixuan)",className:"26S03",group:"Girls",gender:"F"},
-    {id:"19",name:"Sarah Fathima Mohamed Habubakkar",className:"26S04",group:"Girls",gender:"F"},
-    {id:"20",name:"Tan Qi Xuan",className:"26S05",group:"Girls",gender:"F"},
-    {id:"21",name:"Jaren Choi Yaoxiang (Cui Yaoxiang)",className:"26S06",group:"Boys",gender:"M"},
-    {id:"22",name:"Moiiesha Nathan-Koh",className:"26S07",group:"Girls",gender:"F"},
-    {id:"23",name:"Chezelle Shanysse Ten Tse Mynn",className:"26S08",group:"Girls",gender:"F"},
-    {id:"24",name:"Chia Mei Qi",className:"26S09",group:"Girls",gender:"F"},
-    {id:"25",name:"Lin Yuanhao",className:"26S09",group:"Boys",gender:"M"},
-    {id:"26",name:"Low Yu Ren Ray (Liu Yuren)",className:"26S09",group:"Boys",gender:"M"},
-    {id:"27",name:"Hee Xin Rui (Xu Xinrui)",className:"26S14",group:"Girls",gender:"F"},
-    {id:"28",name:"Justin Wang Haoyang",className:"26S14",group:"Boys",gender:"M"},
-    {id:"29",name:"Yogalakshme Balamurugan",className:"26S14",group:"Girls",gender:"F"},
-    {id:"30",name:"Kor Shi Mun, Rachel",className:"26S15",group:"Girls",gender:"F"},
-    {id:"31",name:"Natasha Ann Yong",className:"26S15",group:"Girls",gender:"F"},
-    {id:"32",name:"Leong Jim",className:"26S17",group:"Boys",gender:"M"},
-    {id:"33",name:"Sarah Tan Li Ying",className:"26S17",group:"Girls",gender:"F"},
-    {id:"34",name:"Faith Huang Jia'En",className:"26S18",group:"Girls",gender:"F"},
-    {id:"35",name:"Matias Ang Suan Kai",className:"26S20",group:"Boys",gender:"M"},
-    {id:"36",name:"Gu Jiachang",className:"26S21",group:"Boys",gender:"M"},
-    {id:"37",name:"Jairus Tan Shi Zhe (Chen Shizhe)",className:"26S21",group:"Boys",gender:"M"},
-    {id:"38",name:"Tan Wen Shan, Colin (Chen Wenshan)",className:"26S21",group:"Boys",gender:"M"},
-    {id:"39",name:"Andre Zhang Yuhan",className:"26S22",group:"Boys",gender:"M"},
-    {id:"40",name:"Reyhaan Jett Bhandari",className:"26S22",group:"Boys",gender:"M"},
-    {id:"41",name:"Thien Kai Xin Christie",className:"26S22",group:"Girls",gender:"F"},
-    {id:"42",name:"Ng Wei Jun (Huang Weijun)",className:"26S23",group:"Girls",gender:"F"}
-  ];
+  let students = [];
 
   let sessions = [];
   let attendance = {};
@@ -168,12 +126,25 @@
     if(sessionParam && sessions.some(s=>s.id===sessionParam)) select.value=sessionParam;
   }
 
-  function updateGroupFilter(){
-    const select=document.getElementById("groupFilter");
-    const current=select.value;
-    const groups=[...new Set(students.map(s=>s.group).filter(Boolean))].sort();
-    select.innerHTML='<option value="all">All Groups</option>'+groups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
-    if([...select.options].some(o=>o.value===current))select.value=current;
+  function rowsToStudentObjects(rows){
+    if(!rows.length)return[];
+    const headers=rows[0].map(normaliseHeader);
+    return rows.slice(1).filter(row=>row.some(cell=>String(cell).trim()!=="")).map((row,index)=>{
+      const obj={};
+      headers.forEach((header,i)=>obj[header]=row[i]||"");
+      const name=obj.studentname||obj.name||"";
+      const className=obj.class||obj.classname||"";
+      const gender=obj.mf||obj["m/f"]||obj.gender||obj.sex||"";
+      const genderUpper=String(gender).trim().toUpperCase();
+      const group=genderUpper==="M"?"Boys":genderUpper==="F"?"Girls":(obj.group||"");
+      return {id:String(index+1).padStart(2,"0"),name,className,group,gender:genderUpper};
+    }).filter(student=>student.name);
+  }
+
+  async function loadStudents(){
+    const response=await fetch(STUDENT_CSV_URL+"&cachebust="+Date.now());
+    const csvText=await response.text();
+    students=rowsToStudentObjects(csvToRows(csvText));
   }
 
   function selectedSession(){const id=document.getElementById("sessionSelect").value;return sessions.find(s=>s.id===id)||null;}
@@ -215,8 +186,8 @@
     const boys=students.filter(isBoy),girls=students.filter(isGirl);
     const count=(list,status)=>list.filter(s=>(attendance[s.id]?.status||"")===status).length;
     const recorded=list=>list.filter(s=>["Present","Absent","MC/Parent Letter"].includes(attendance[s.id]?.status||"")).length;
-    document.getElementById("boysRecordedCount").textContent=`${recorded(boys)}/21`;
-    document.getElementById("girlsRecordedCount").textContent=`${recorded(girls)}/21`;
+    document.getElementById("boysRecordedCount").textContent=`${recorded(boys)}/${boys.length}`;
+    document.getElementById("girlsRecordedCount").textContent=`${recorded(girls)}/${girls.length}`;
     document.getElementById("boysPresentCount").textContent=count(boys,"Present");
     document.getElementById("girlsPresentCount").textContent=count(girls,"Present");
     document.getElementById("boysAbsentCount").textContent=count(boys,"Absent");
@@ -261,7 +232,7 @@
   async function loadAll(){
     document.getElementById("studentContainer").innerHTML='<div class="loading">Loading students...</div>';
     await loadSchedule();
-    updateGroupFilter();
+    await loadStudents();
     startAttendanceListener();
     renderStudents();
   }
