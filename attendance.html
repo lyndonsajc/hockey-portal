@@ -16,6 +16,7 @@
       <div><label for="sessionSelect">Session from Schedule</label><select id="sessionSelect"><option>Loading sessions...</option></select></div>
     </div>
     <div class="mode-row">
+      <a class="main-btn" href="index.html">← Back to Schedule</a>
       <button class="mode-btn active">✅ Attendance Taking</button>
       <button class="mode-btn" onclick="loadAll()">🔄 Refresh</button>
     </div>
@@ -205,6 +206,9 @@
     if(!session||!student){alert("Select a valid session first.");return;}
     const reason=document.getElementById(`reason-${studentId}`)?.value||attendance[studentId]?.reason||"";
     await setDoc(doc(db,"attendance",session.id,"records",studentId),{studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
+    attendance[studentId]={...(attendance[studentId]||{}),status,reason};
+    updateSummary();
+    renderStudents();
   }
 
   async function saveReason(studentId,reason){
@@ -212,6 +216,8 @@
     const student=students.find(s=>s.id===studentId);
     if(!session||!student)return;
     await setDoc(doc(db,"attendance",session.id,"records",studentId),{studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status:attendance[studentId]?.status||"Unmarked",reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
+    attendance[studentId]={...(attendance[studentId]||{}),reason};
+    updateSummary();
   }
 
   function downloadCsv(){
@@ -231,7 +237,7 @@
   window.saveReason=saveReason;
   window.loadAll=loadAll;
   window.downloadCsv=downloadCsv;
-  document.getElementById("sessionSelect").addEventListener("change",startAttendanceListener);
+  document.getElementById("sessionSelect").addEventListener("change",()=>{startAttendanceListener();setTimeout(updateSummary,300);});
   loadAll();
 </script>
 </body>
