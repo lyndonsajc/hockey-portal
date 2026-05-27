@@ -122,7 +122,7 @@
       const obj={};headers.forEach((header,i)=>obj[header]=row[i]||"");
       const name=obj.studentname||obj.name||"";
       const className=obj.class||obj.classname||"";
-      const gender=obj.mf||obj.gender||obj.sex||"";
+      const gender=obj.mf||obj["m/f"]||obj.gender||obj.sex||"";
       const genderUpper=String(gender).trim().toUpperCase();
       const group=genderUpper==="M"?"Boys":genderUpper==="F"?"Girls":(obj.group||"");
       return {id:String(index+1).padStart(2,"0"),name,className,group,gender:genderUpper};
