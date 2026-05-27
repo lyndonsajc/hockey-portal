@@ -59,6 +59,13 @@
     <div class="list-box"><h3>✅ Present</h3><div id="presentList" class="name-list">No one marked present yet.</div></div>
     <div class="list-box"><h3>❌ Absent / MC/PL</h3><div id="absenceList" class="name-list">No one marked absent or MC/PL yet.</div></div>
   </section>
+
+  <section class="list-summary">
+    <div class="list-box" style="grid-column:1/-1">
+      <h3>⏳ Unmarked Attendance</h3>
+      <div id="unmarkedList" class="name-list">All students have been marked.</div>
+    </div>
+  </section>
 </main>
 
 <script type="module">
@@ -194,10 +201,23 @@
   function updateLists(){
     const present=students.filter(s=>(attendance[s.id]?.status||"")==="Present");
     const absence=students.filter(s=>["Absent","MC/Parent Letter"].includes(attendance[s.id]?.status||""));
+    const unmarked=students.filter(s=>!["Present","Absent","MC/Parent Letter"].includes(attendance[s.id]?.status||""));
+
     const presentBox=document.getElementById("presentList");
     const absenceBox=document.getElementById("absenceList");
-    presentBox.innerHTML=present.length?present.map(s=>`<div>${escapeHtml(s.name)} <strong>(${escapeHtml(s.className)}, ${escapeHtml(s.group)})</strong></div>`).join(""):"No one marked present yet.";
-    absenceBox.innerHTML=absence.length?absence.map(s=>{const r=attendance[s.id]||{};return `<div>${escapeHtml(s.name)} <strong>(${escapeHtml(r.status||"")})</strong>${r.reason?" — "+escapeHtml(r.reason):""}</div>`}).join(""):"No one marked absent or MC/PL yet.";
+    const unmarkedBox=document.getElementById("unmarkedList");
+
+    presentBox.innerHTML=present.length
+      ?present.map(s=>`<div>${escapeHtml(s.name)} <strong>(${escapeHtml(s.className)}, ${escapeHtml(s.group)})</strong></div>`).join("")
+      :"No one marked present yet.";
+
+    absenceBox.innerHTML=absence.length
+      ?absence.map(s=>{const r=attendance[s.id]||{};return `<div>${escapeHtml(s.name)} <strong>(${escapeHtml(r.status||"")})</strong>${r.reason?" — "+escapeHtml(r.reason):""}</div>`}).join("")
+      :"No one marked absent or MC/PL yet.";
+
+    unmarkedBox.innerHTML=unmarked.length
+      ?unmarked.map(s=>`<div>${escapeHtml(s.name)} <strong>(${escapeHtml(s.className)}, ${escapeHtml(s.group)})</strong></div>`).join("")
+      :"All students have been marked.";
   }
 
   async function saveTeacherRecord(session, student, status, reason){
