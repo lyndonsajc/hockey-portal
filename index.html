@@ -3,223 +3,246 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hockey Team Schedule</title>
+  <title>Hockey Attendance Dashboard</title>
   <style>
-    :root{--blue:#123c69;--blue2:#1f5f99;--light:#e8f1fb;--gold:#f6c453;--dark:#1f2937;--border:#d1d5db}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:28px 16px;text-align:center}header h1{margin:0;font-size:30px}.container{max-width:1100px;margin:20px auto;padding:0 14px 36px}.toolbar{background:white;border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.05);margin-bottom:18px}label{font-size:12px;font-weight:bold;color:#4b5563;display:block;margin-bottom:5px}input{width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}.quick-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.btn{border:none;border-radius:999px;padding:9px 13px;background:var(--blue);color:white;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:13px}.btn.secondary{background:white;color:var(--blue);border:1px solid var(--border)}.term-title{margin:26px 0 10px;font-size:25px;color:var(--blue)}.schedule-grid{display:flex;flex-direction:column;gap:14px;max-height:900px;overflow-y:auto;padding-right:6px}.schedule-grid::-webkit-scrollbar{width:8px}.schedule-grid::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}.schedule-grid::-webkit-scrollbar-track{background:#eef2f7;border-radius:999px}.card{background:white;border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.05);width:100%}.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}.date{font-size:21px;font-weight:bold;color:var(--blue)}.day{background:var(--light);color:var(--blue);padding:6px 10px;border-radius:999px;font-size:13px;font-weight:bold}.info{display:grid;grid-template-columns:86px 1fr;gap:7px;margin:8px 0;font-size:14px}.info span:first-child{color:#6b7280;font-weight:bold}.tag{display:inline-block;background:#fff7df;color:#7a5200;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:bold;margin-top:4px}.card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;border-top:1px solid #eee;padding-top:12px}.small-btn{border-radius:10px;border:1px solid var(--border);padding:8px 10px;background:white;color:var(--blue);font-weight:bold;cursor:pointer;text-decoration:none;font-size:13px}.empty,.loading,.error{background:white;border:1px dashed var(--border);border-radius:16px;padding:20px;text-align:center;color:#6b7280}.error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}details{margin-top:8px;background:#f9fafb;border-radius:10px;padding:9px 11px;font-size:13px}summary{cursor:pointer;font-weight:bold;color:var(--blue)}@media(max-width:760px){header h1{font-size:25px}.term-title{font-size:22px}}
+    :root{--blue:#123c69;--blue2:#1f5f99;--green:#15803d;--green-bg:#dcfce7;--red:#b91c1c;--red-bg:#fee2e2;--purple:#6d28d9;--purple-bg:#ede9fe;--border:#d1d5db;--dark:#1f2937}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:18px 12px;text-align:center}header h1{margin:0;font-size:24px}.container{max-width:1180px;margin:12px auto;padding:0 10px 28px}.panel{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}.controls{display:grid;grid-template-columns:1fr;gap:10px}label{display:block;font-size:12px;font-weight:bold;color:#4b5563;margin-bottom:5px}input,select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}.mode-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.mode-btn,.main-btn{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:bold;cursor:pointer;background:white;color:var(--blue);font-size:13px;text-decoration:none;display:inline-block}.mode-btn.active,.main-btn.primary{background:var(--blue);color:white;border-color:var(--blue)}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.team-summary{border-radius:14px;padding:12px;border:1px solid var(--border);background:white}.team-summary-title{font-weight:bold;color:var(--blue);font-size:17px;margin-bottom:8px}.team-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.mini-stat{border-radius:12px;padding:10px;text-align:center;border:1px solid var(--border)}.mini-stat .number{font-size:25px;font-weight:bold;margin-bottom:3px}.mini-stat .label{font-size:12px;font-weight:bold;color:#4b5563}.present{background:var(--green-bg);color:var(--green)}.absent{background:var(--red-bg);color:var(--red)}.mc{background:var(--purple-bg);color:var(--purple)}.student-panel{background:white;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.04)}.student-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;color:white;background:var(--blue);font-weight:bold;font-size:18px}.student-total{background:white;color:var(--blue);border-radius:999px;padding:5px 10px;font-size:13px}.student-list{padding:10px;max-height:760px;overflow-y:auto}.student-card{border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;margin-bottom:6px;background:white;display:grid;grid-template-columns:1fr;gap:5px}.student-top{display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}.name{font-size:14px;font-weight:bold;color:var(--blue);white-space:nowrap;overflow-x:auto;overflow-y:hidden;text-overflow:clip;max-width:100%;scrollbar-width:thin}.meta{margin-top:0;color:#6b7280;font-size:11px;white-space:nowrap;display:inline;margin-left:6px}.status-pill{border-radius:999px;padding:5px 8px;font-size:12px;font-weight:bold;background:#f3f4f6;color:#374151;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:92px;height:26px;flex-shrink:0}.attendance-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:center}.button-grid{display:contents}.att-btn{border:none;border-radius:8px;padding:6px 4px;font-size:12px;font-weight:bold;cursor:pointer;width:100%;height:30px}.att-btn.mc{font-size:10px;line-height:1.05}.att-btn.present{background:var(--green-bg);color:var(--green)}.att-btn.absent{background:var(--red-bg);color:var(--red)}.att-btn.mc{background:var(--purple-bg);color:var(--purple)}.details-grid{display:block;min-width:0}.reason-input{padding:6px;border:1px solid var(--border);border-radius:7px;font-size:11px;width:100%;min-width:0}.timestamp{font-size:10px;color:#6b7280;text-align:right;white-space:nowrap}.loading,.empty,.error{background:white;border:1px dashed var(--border);border-radius:14px;padding:18px;text-align:center;color:#6b7280}.error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}.footer-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.list-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.list-box{background:white;border:1px solid var(--border);border-radius:14px;padding:12px}.list-box h3{margin:0 0 8px;color:var(--blue);font-size:16px}.name-list{font-size:13px;line-height:1.5;max-height:260px;overflow-y:auto}.name-list div{padding:3px 0;border-bottom:1px solid #f1f5f9}.name-list div:last-child{border-bottom:none}@media(max-width:760px){header h1{font-size:21px}.container{margin:8px auto}.controls{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr}.student-card{grid-template-columns:1fr;align-items:flex-start}.attendance-row{grid-template-columns:repeat(4,1fr)}.details-grid{width:100%}.list-summary{grid-template-columns:1fr}.mode-btn,.main-btn{font-size:12px;padding:8px 10px}.student-card{padding:8px}.att-btn{font-size:12px;padding:9px 4px}}
   </style>
 </head>
 <body>
-  <header><h1>Hockey Team Schedule 2026</h1></header>
-
-  <main class="container">
-    <section class="toolbar">
-      <label for="searchInput">Search</label>
-      <input id="searchInput" type="text" placeholder="Search date, coach, venue..." />
-    </section>
-
-    <div class="quick-actions">
-      <a class="btn" href="attendance.html">✅ Take Attendance</a>
-      <button class="btn secondary" onclick="loadSchedule()">🔄 Refresh</button>
-      <button class="btn secondary" onclick="window.print()">🖨 Print Schedule</button>
+<header><h1>Hockey Attendance Dashboard</h1></header>
+<main class="container">
+  <section class="panel">
+    <div class="controls">
+      <div><label for="sessionSelect">Session from Schedule</label><select id="sessionSelect"><option>Loading sessions...</option></select></div>
     </div>
+    <div class="mode-row">
+      <button class="mode-btn active">✅ Attendance Taking</button>
+      <button class="mode-btn" onclick="loadAll()">🔄 Refresh</button>
+    </div>
+  </section>
 
-    <section id="scheduleContainer"><div class="loading">Loading schedule...</div></section>
-  </main>
-
-  <script>
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1nH3Jvm1XFFqA52Sj7I0Swll9DU5yUOqv0ddr21zWEgw/export?format=csv&gid=0";
-    let schedule = [];
-
-    const fallbackMapLinks = {
-      "PSOEB": "https://www.google.com/maps/search/?api=1&query=PSOEB",
-      "Sengkang": "https://www.google.com/maps/search/?api=1&query=Sengkang+Hockey+Pitch",
-      "School": "https://www.google.com/maps/search/?api=1&query=St+Andrew's+Junior+College"
-    };
-
-    function escapeHtml(text){
-      return String(text ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    }
-
-    function parseCSV(text){
-      const rows=[];
-      let row=[];
-      let cell="";
-      let quote=false;
-
-      for(let i=0;i<text.length;i++){
-        const c=text[i];
-        const n=text[i+1];
-
-        if(c==='"' && quote && n==='"'){
-          cell+='"';
-          i++;
-        } else if(c==='"'){
-          quote=!quote;
-        } else if(c===',' && !quote){
-          row.push(cell.trim());
-          cell="";
-        } else if((c==='\n'||c==='\r') && !quote){
-          if(cell || row.length){
-            row.push(cell.trim());
-            rows.push(row);
-            row=[];
-            cell="";
-          }
-          if(c==='\r' && n==='\n') i++;
-        } else {
-          cell+=c;
-        }
-      }
-
-      if(cell || row.length){
-        row.push(cell.trim());
-        rows.push(row);
-      }
-      return rows;
-    }
-
-    function normaliseHeader(h){
-      return String(h || "").toLowerCase().replace(/\s+/g,"");
-    }
-
-    function getSessionDate(item){
-      if(item.dateISO && /^\d{4}-\d{2}-\d{2}$/.test(item.dateISO)) return new Date(item.dateISO + "T00:00:00");
-      if(item.date && /^\d{4}-\d{2}-\d{2}$/.test(item.date)) return new Date(item.date + "T00:00:00");
-
-      const monthMap={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-      const parts=String(item.date || "").split("-");
-
-      if(parts.length>=2){
-        const d=Number(parts[0]);
-        const m=monthMap[String(parts[1]).slice(0,3).toLowerCase()];
-        if(!isNaN(d) && m!==undefined) return new Date(2026,m,d);
-      }
-      return null;
-    }
-
-    function isTodayOrFuture(item){
-      const d=getSessionDate(item);
-      if(!d) return true;
-      const today=new Date();
-      today.setHours(0,0,0,0);
-      d.setHours(0,0,0,0);
-      return d>=today;
-    }
-
-    function makeSessionId(item){
-      return `${item.dateISO || item.date}_${item.day || ""}_${item.start || ""}_${item.end || ""}_${item.venue || ""}`.replace(/[^a-zA-Z0-9_-]/g,"_");
-    }
-
-    function makeMapLink(item){
-      return item.mapLink || fallbackMapLinks[item.venue] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.venue || "")}`;
-    }
-
-    function makeCalendarLink(item){
-      const d=getSessionDate(item);
-      const date=d ? `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}` : "20260101";
-      const start=`${date}T${item.start || "0000"}00`;
-      const end=`${date}T${item.end || "0100"}00`;
-      const title=encodeURIComponent(`Hockey ${item.remarks || "Training"}`);
-      const location=encodeURIComponent(item.venue || "");
-      const details=encodeURIComponent(`Coach: ${item.coach || "TBC"}\nTIC: ${item.tic || "TBC"}`);
-      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${location}&details=${details}`;
-    }
-
-    async function loadSchedule(){
-      const container=document.getElementById("scheduleContainer");
-      container.innerHTML=`<div class="loading">Loading schedule...</div>`;
-
-      try{
-        const response=await fetch(SHEET_CSV_URL + "&cache=" + Date.now());
-        if(!response.ok) throw new Error("Unable to fetch Google Sheet");
-
-        const csvText=await response.text();
-        const rows=parseCSV(csvText);
-
-        if(!rows.length){
-          throw new Error("CSV is empty");
-        }
-
-        const headers=rows[0].map(normaliseHeader);
-
-        schedule=rows.slice(1)
-          .filter(row=>row.some(cell=>String(cell).trim()!==""))
-          .map(row=>{
-            const obj={};
-            headers.forEach((h,i)=>obj[h]=row[i] || "");
-            return {
-              term: obj.term || "2026 Schedule",
-              date: obj.date || "",
-              dateISO: obj.dateiso || "",
-              day: obj.day || "",
-              start: obj.starttime || obj.start || "",
-              end: obj.endtime || obj.end || "",
-              venue: obj.venue || "",
-              remarks: obj.remarks || "Training",
-              coach: obj.coach || "",
-              tic: obj.tic || "",
-              mapLink: obj.maplink || ""
-            };
-          })
-          .filter(isTodayOrFuture)
-          .sort((a,b)=>(getSessionDate(a)||new Date(9999,0,1))-(getSessionDate(b)||new Date(9999,0,1)));
-
-        renderSchedule();
-      } catch(err){
-        console.error(err);
-        container.innerHTML=`<div class="error">Unable to load Google Sheets schedule. Check that the sheet is published or shared properly.</div>`;
-      }
-    }
-
-    function renderSchedule(){
-      const searchValue=document.getElementById("searchInput").value.toLowerCase();
-      const filtered=schedule.filter(item=>Object.values(item).join(" ").toLowerCase().includes(searchValue));
-
-      const grouped=filtered.reduce((acc,item)=>{
-        const term=item.term || "Schedule";
-        if(!acc[term]) acc[term]=[];
-        acc[term].push(item);
-        return acc;
-      },{});
-
-      const container=document.getElementById("scheduleContainer");
-
-      if(filtered.length===0){
-        container.innerHTML=`<div class="empty">No upcoming sessions found.</div>`;
-        return;
-      }
-
-      container.innerHTML=Object.keys(grouped).map(term=>`
-        <h2 class="term-title">${escapeHtml(term)}</h2>
-        <div class="schedule-grid">
-          ${grouped[term].map(item=>`
-            <article class="card">
-              <div class="card-top">
-                <div>
-                  <div class="date">${escapeHtml(item.date || item.dateISO)}</div>
-                  <span class="tag">${escapeHtml(item.start)}–${escapeHtml(item.end)}</span>
-                </div>
-                <div class="day">${escapeHtml(item.day)}</div>
-              </div>
-              <div class="info"><span>Venue</span><span>${escapeHtml(item.venue)}</span></div>
-              <div class="info"><span>Remarks</span><span>${escapeHtml(item.remarks || "Training")}</span></div>
-              <div class="info"><span>Coach</span><span>${escapeHtml(item.coach || "TBC")}</span></div>
-              <div class="info"><span>TIC</span><span>${escapeHtml(item.tic || "TBC")}</span></div>
-              
-              <div class="card-actions">
-                <a class="small-btn" href="${makeMapLink(item)}" target="_blank">📍 Map</a>
-                <a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">📅 Add</a>
-                <a class="small-btn" href="attendance.html?session=${encodeURIComponent(makeSessionId(item))}">✅ Attendance</a>
-              </div>
-            </article>
-          `).join("")}
+  <section class="panel">
+    <div class="summary-grid">
+      <div class="team-summary">
+        <div class="team-summary-title">👦 Boys</div>
+        <div class="team-summary-row">
+          <div class="mini-stat"><div id="boysRecordedCount" class="number">0/21</div><div class="label">Recorded</div></div>
+          <div class="mini-stat present"><div id="boysPresentCount" class="number">0</div><div class="label">Present</div></div>
+          <div class="mini-stat absent"><div id="boysAbsentCount" class="number">0</div><div class="label">Absent</div></div>
+          <div class="mini-stat mc"><div id="boysMcCount" class="number">0</div><div class="label">MC/PL</div></div>
         </div>
-      `).join("");
-    }
+      </div>
+      <div class="team-summary">
+        <div class="team-summary-title">👧 Girls</div>
+        <div class="team-summary-row">
+          <div class="mini-stat"><div id="girlsRecordedCount" class="number">0/21</div><div class="label">Recorded</div></div>
+          <div class="mini-stat present"><div id="girlsPresentCount" class="number">0</div><div class="label">Present</div></div>
+          <div class="mini-stat absent"><div id="girlsAbsentCount" class="number">0</div><div class="label">Absent</div></div>
+          <div class="mini-stat mc"><div id="girlsMcCount" class="number">0</div><div class="label">MC/PL</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    document.getElementById("searchInput").addEventListener("input",renderSchedule);
-    window.loadSchedule=loadSchedule;
-    loadSchedule();
-  </script>
+  <section class="student-panel">
+    <div class="student-header">🏑 Attendance List <span id="studentTotalPill" class="student-total">Total: 0</span></div>
+    <div id="studentContainer" class="student-list"><div class="loading">Loading students...</div></div>
+  </section>
+
+  <div class="footer-actions">
+    <button class="main-btn primary" onclick="downloadCsv()">⬇ Download CSV</button>
+    <a class="main-btn" href="index.html">← Back to Schedule</a>
+  </div>
+
+  <section class="list-summary">
+    <div class="list-box"><h3>✅ Present</h3><div id="presentList" class="name-list">No one marked present yet.</div></div>
+    <div class="list-box"><h3>❌ Absent / MC/PL</h3><div id="absenceList" class="name-list">No one marked absent or MC/PL yet.</div></div>
+  </section>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBTKW9nlCQK-1ktvEu8at4-KRLjIwbz660",
+    authDomain: "saintshockeyattendance.firebaseapp.com",
+    projectId: "saintshockeyattendance",
+    storageBucket: "saintshockeyattendance.firebasestorage.app",
+    messagingSenderId: "717790587080",
+    appId: "1:717790587080:web:cd9e1a07d580566f3f1dfd"
+  };
+
+  const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
+  const STUDENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=1879195237";
+  const MC_PARENT_LETTER_UPLOAD_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSeWelhY6SsCrPo2g-GGByH33dAS0hx26AygKzQrtOgqWbay3A/viewform?usp=header";
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let students = [];
+
+  let sessions = [];
+  let attendance = {};
+  let unsubscribeAttendance = null;
+
+  function csvToRows(text){const rows=[];let row=[],cell="",insideQuotes=false;for(let i=0;i<text.length;i++){const char=text[i],next=text[i+1];if(char==='"'&&insideQuotes&&next==='"'){cell+='"';i++}else if(char==='"'){insideQuotes=!insideQuotes}else if(char===','&&!insideQuotes){row.push(cell.trim());cell=""}else if((char==='\n'||char==='\r')&&!insideQuotes){if(cell||row.length){row.push(cell.trim());rows.push(row);row=[];cell=""}if(char==='\r'&&next==='\n')i++}else{cell+=char}}if(cell||row.length){row.push(cell.trim());rows.push(row)}return rows}
+  function normaliseHeader(header){return header.toLowerCase().replace(/\s+/g,"")}
+  function escapeHtml(text){return String(text).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+  function safeId(text){return String(text).trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}
+
+  function rowsToScheduleObjects(rows){
+    if(!rows.length)return[];
+    const headers=rows[0].map(normaliseHeader);
+    return rows.slice(1).filter(row=>row.some(cell=>cell.trim()!=="")).map(row=>{
+      const obj={};headers.forEach((header,index)=>obj[header]=row[index]||"");
+      const item={term:obj.term||"",date:obj.date||"",day:obj.day||"",start:obj.start||obj.starttime||"",end:obj.end||obj.endtime||"",venue:obj.venue||"",remarks:obj.remarks||"Training",coach:obj.coach||"",tic:obj.tic||""};
+      item.id=safeId(`${item.date}-${item.day}-${item.start}-${item.end}-${item.venue}-${item.remarks}`);
+      item.label=`${item.date} ${item.day} ${item.start}-${item.end} ${item.venue} (${item.remarks})`;
+      return item;
+    }).filter(item=>item.date);
+  }
+
+  function scheduleDateObject(dateText){
+    if(!dateText)return null;
+    const monthMap={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+    const clean=String(dateText).trim();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(clean)){const[y,m,d]=clean.split("-").map(Number);return new Date(y,m-1,d)}
+    const parts=clean.split("-");
+    if(parts.length>=2){const day=Number(parts[0]);const month=monthMap[String(parts[1]).slice(0,3).toLowerCase()];if(!isNaN(day)&&month!==undefined)return new Date(2026,month,day)}
+    const parsed=new Date(clean);return isNaN(parsed.getTime())?null:parsed;
+  }
+
+  function isTodayOrFuture(item){const d=scheduleDateObject(item.date);if(!d)return true;const today=new Date();today.setHours(0,0,0,0);d.setHours(0,0,0,0);return d>=today;}
+
+  async function loadSchedule(){
+    const response=await fetch(SCHEDULE_CSV_URL+"&cachebust="+Date.now());
+    const csvText=await response.text();
+    sessions=rowsToScheduleObjects(csvToRows(csvText)).filter(isTodayOrFuture).sort((a,b)=>(scheduleDateObject(a.date)||new Date(9999,0,1))-(scheduleDateObject(b.date)||new Date(9999,0,1)));
+    const select=document.getElementById("sessionSelect");
+    const params=new URLSearchParams(window.location.search);
+    const sessionParam=params.get("session");
+    select.innerHTML=sessions.length?sessions.map(s=>`<option value="${s.id}">${escapeHtml(s.label)}</option>`).join(""):`<option value="">No upcoming sessions</option>`;
+    if(sessionParam && sessions.some(s=>s.id===sessionParam)) select.value=sessionParam;
+  }
+
+  function rowsToStudentObjects(rows){
+    if(!rows.length)return[];
+    const headers=rows[0].map(normaliseHeader);
+    return rows.slice(1).filter(row=>row.some(cell=>String(cell).trim()!=="")).map((row,index)=>{
+      const obj={};
+      headers.forEach((header,i)=>obj[header]=row[i]||"");
+      const name=obj.studentname||obj.name||"";
+      const className=obj.class||obj.classname||"";
+      const gender=obj.mf||obj["m/f"]||obj.gender||obj.sex||"";
+      const genderUpper=String(gender).trim().toUpperCase();
+      const group=genderUpper==="M"?"Boys":genderUpper==="F"?"Girls":(obj.group||"");
+      return {id:String(index+1).padStart(2,"0"),name,className,group,gender:genderUpper};
+    }).filter(student=>student.name);
+  }
+
+  async function loadStudents(){
+    const response=await fetch(STUDENT_CSV_URL+"&cachebust="+Date.now());
+    const csvText=await response.text();
+    students=rowsToStudentObjects(csvToRows(csvText));
+  }
+
+  function selectedSession(){const id=document.getElementById("sessionSelect").value;return sessions.find(s=>s.id===id)||null;}
+
+  function startAttendanceListener(){
+    if(unsubscribeAttendance)unsubscribeAttendance();
+    const session=selectedSession();
+    attendance={};
+    if(!session){renderStudents();return;}
+    unsubscribeAttendance=onSnapshot(collection(db,"attendance",session.id,"records"),snap=>{
+      attendance={};snap.docs.forEach(d=>attendance[d.id]=d.data());renderStudents();
+    },err=>{document.getElementById("studentContainer").innerHTML='<div class="error">Firebase read failed. Check Firestore test mode/rules.</div>';console.error(err);});
+  }
+
+  function filteredStudents(){
+    return students;
+  }
+
+  function isBoy(student){return String(student.gender).toUpperCase()==="M"||student.group==="Boys"}
+  function isGirl(student){return String(student.gender).toUpperCase()==="F"||student.group==="Girls"}
+
+  function cardHtml(student){
+    const record=attendance[student.id]||{};
+    const status=record.status||"Unmarked";
+    const reason=record.reason||"";
+    const timestamp=record.timestamp?.toDate?record.timestamp.toDate().toLocaleString("en-SG",{hour12:false}):record.updatedAt||"";
+    const statusClass=status.toLowerCase().replace(/[^a-z]/g,"");
+    return `<article class="student-card"><div class="student-top"><div class="name">${escapeHtml(student.name)} <span class="meta">${escapeHtml(student.className||"No class")} • ${escapeHtml(student.group)}</span></div><div class="status-pill ${statusClass}">${escapeHtml(status)}</div></div><div class="attendance-row"><div class="button-grid"><button class="att-btn present" onclick="markAttendance('${student.id}', 'Present')">✅</button><button class="att-btn absent" onclick="markAttendance('${student.id}', 'Absent')">❌</button><button class="att-btn mc" onclick="markAttendance('${student.id}', 'MC/Parent Letter'); window.open('${MC_PARENT_LETTER_UPLOAD_LINK}', '_blank')">MC/PL</button></div><div class="details-grid"><input class="reason-input" id="reason-${student.id}" value="${escapeHtml(reason)}" placeholder="Reason for Absence" onchange="saveReason('${student.id}', this.value)" /></div><div class="timestamp">${timestamp?escapeHtml(timestamp):""}</div></div></article>`;
+  }
+
+  function renderStudents(){
+    const filtered=filteredStudents();
+    document.getElementById("studentContainer").innerHTML=filtered.length?filtered.map(cardHtml).join(""):'<div class="empty">No students found.</div>';
+    document.getElementById("studentTotalPill").textContent=`Total: ${filtered.length}`;
+    updateSummary();
+  }
+
+  function updateSummary(){
+    const boys=students.filter(isBoy),girls=students.filter(isGirl);
+    const count=(list,status)=>list.filter(s=>(attendance[s.id]?.status||"")===status).length;
+    const recorded=list=>list.filter(s=>["Present","Absent","MC/Parent Letter"].includes(attendance[s.id]?.status||"")).length;
+    document.getElementById("boysRecordedCount").textContent=`${recorded(boys)}/${boys.length}`;
+    document.getElementById("girlsRecordedCount").textContent=`${recorded(girls)}/${girls.length}`;
+    document.getElementById("boysPresentCount").textContent=count(boys,"Present");
+    document.getElementById("girlsPresentCount").textContent=count(girls,"Present");
+    document.getElementById("boysAbsentCount").textContent=count(boys,"Absent");
+    document.getElementById("girlsAbsentCount").textContent=count(girls,"Absent");
+    document.getElementById("boysMcCount").textContent=count(boys,"MC/Parent Letter");
+    document.getElementById("girlsMcCount").textContent=count(girls,"MC/Parent Letter");
+    updateLists();
+  }
+
+  function updateLists(){
+    const present=students.filter(s=>(attendance[s.id]?.status||"")==="Present");
+    const absence=students.filter(s=>["Absent","MC/Parent Letter"].includes(attendance[s.id]?.status||""));
+    const presentBox=document.getElementById("presentList");
+    const absenceBox=document.getElementById("absenceList");
+    presentBox.innerHTML=present.length?present.map(s=>`<div>${escapeHtml(s.name)} <strong>(${escapeHtml(s.className)}, ${escapeHtml(s.group)})</strong></div>`).join(""):"No one marked present yet.";
+    absenceBox.innerHTML=absence.length?absence.map(s=>{const r=attendance[s.id]||{};return `<div>${escapeHtml(s.name)} <strong>(${escapeHtml(r.status||"")})</strong>${r.reason?" — "+escapeHtml(r.reason):""}</div>`}).join(""):"No one marked absent or MC/PL yet.";
+  }
+
+  async function markAttendance(studentId,status){
+    const session=selectedSession();
+    const student=students.find(s=>s.id===studentId);
+    if(!session||!student){alert("Select a valid session first.");return;}
+    const reason=document.getElementById(`reason-${studentId}`)?.value||attendance[studentId]?.reason||"";
+    await setDoc(doc(db,"attendance",session.id,"records",studentId),{studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
+  }
+
+  async function saveReason(studentId,reason){
+    const session=selectedSession();
+    const student=students.find(s=>s.id===studentId);
+    if(!session||!student)return;
+    await setDoc(doc(db,"attendance",session.id,"records",studentId),{studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status:attendance[studentId]?.status||"Unmarked",reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
+  }
+
+  function downloadCsv(){
+    const session=selectedSession();
+    const rows=[["Session","Name","Class","Group","Status","Reason","Updated At"]];
+    students.forEach(student=>{const record=attendance[student.id]||{};rows.push([session?.label||"",student.name,student.className,student.group,record.status||"Unmarked",record.reason||"",record.updatedAt||""]);});
+    const csv=rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
+    const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`attendance_${session?.id||"session"}.csv`;a.click();URL.revokeObjectURL(url);
+  }
+
+  async function loadAll(){
+    document.getElementById("studentContainer").innerHTML='<div class="loading">Loading students...</div>';
+    await loadSchedule();
+    await loadStudents();
+    startAttendanceListener();
+    renderStudents();
+  }
+
+  window.markAttendance=markAttendance;
+  window.saveReason=saveReason;
+  window.loadAll=loadAll;
+  window.downloadCsv=downloadCsv;
+  document.getElementById("sessionSelect").addEventListener("change",startAttendanceListener);
+  loadAll();
+</script>
 </body>
 </html>
