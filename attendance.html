@@ -3,57 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hockey Attendance</title>
+  <title>Hockey Attendance Dashboard</title>
   <style>
-    :root{--blue:#123c69;--blue2:#1f5f99;--green:#15803d;--green-bg:#dcfce7;--red:#b91c1c;--red-bg:#fee2e2;--purple:#6d28d9;--purple-bg:#ede9fe;--border:#d1d5db;--dark:#1f2937}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:18px 12px;text-align:center}header h1{margin:0;font-size:24px}.container{max-width:1100px;margin:12px auto;padding:0 10px 28px}.panel{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}.top-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.session-title{font-weight:bold;color:var(--blue);font-size:18px}.session-meta{font-size:13px;color:#6b7280;margin-top:4px}.btn{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:bold;cursor:pointer;background:white;color:var(--blue);text-decoration:none;display:inline-block;font-size:13px}.btn.primary{background:var(--blue);color:white;border-color:var(--blue)}.search-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}input,select{width:100%;padding:9px;border:1px solid var(--border);border-radius:10px;font-size:14px}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.team-summary{border:1px solid var(--border);border-radius:12px;padding:10px;background:white}.team-title{font-weight:bold;color:var(--blue);margin-bottom:8px}.team-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.stat{border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center}.stat .num{font-size:22px;font-weight:bold}.stat .label{font-size:11px;color:#4b5563;font-weight:bold}.present{background:var(--green-bg);color:var(--green)}.absent{background:var(--red-bg);color:var(--red)}.mc{background:var(--purple-bg);color:var(--purple)}.student-list{display:flex;flex-direction:column;gap:8px;max-height:760px;overflow-y:auto;padding-right:4px}.student-card{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:9px}.student-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}.name{font-weight:bold;color:var(--blue);font-size:15px}.meta{font-size:12px;color:#6b7280;margin-top:2px}.pill{border-radius:999px;padding:4px 7px;font-size:11px;font-weight:bold;background:#f3f4f6;color:#374151;white-space:nowrap}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.att-btn{border:none;border-radius:9px;padding:9px 4px;font-size:12px;font-weight:bold;cursor:pointer}.att-btn.present{background:var(--green-bg);color:var(--green)}.att-btn.absent{background:var(--red-bg);color:var(--red)}.att-btn.mc{background:var(--purple-bg);color:var(--purple)}.details{display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:7px}.reason{font-size:12px;padding:8px}.timestamp{font-size:11px;color:#6b7280;margin-top:5px}.loading,.empty,.error{background:white;border:1px dashed var(--border);border-radius:14px;padding:18px;text-align:center;color:#6b7280}.error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}@media(max-width:760px){header h1{font-size:21px}.top-row{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr}.team-stats{grid-template-columns:repeat(4,1fr)}.actions{grid-template-columns:repeat(3,1fr)}.details{grid-template-columns:1fr}.btn{font-size:12px;padding:8px 10px}}
+    :root{--blue:#123c69;--blue2:#1f5f99;--green:#15803d;--green-bg:#dcfce7;--red:#b91c1c;--red-bg:#fee2e2;--purple:#6d28d9;--purple-bg:#ede9fe;--border:#d1d5db;--dark:#1f2937}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:18px 12px;text-align:center}header h1{margin:0;font-size:24px}.container{max-width:1180px;margin:12px auto;padding:0 10px 28px}.panel{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}.controls{display:grid;grid-template-columns:1fr;gap:10px}label{display:block;font-size:12px;font-weight:bold;color:#4b5563;margin-bottom:5px}select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}.mode-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.mode-btn,.main-btn{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:bold;cursor:pointer;background:white;color:var(--blue);font-size:13px;text-decoration:none;display:inline-block}.mode-btn.active,.main-btn.primary{background:var(--blue);color:white;border-color:var(--blue)}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.team-summary{border-radius:14px;padding:12px;border:1px solid var(--border);background:white}.team-summary-title{font-weight:bold;color:var(--blue);font-size:17px;margin-bottom:8px}.team-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.mini-stat{border-radius:12px;padding:10px;text-align:center;border:1px solid var(--border)}.mini-stat .number{font-size:25px;font-weight:bold;margin-bottom:3px}.mini-stat .label{font-size:12px;font-weight:bold;color:#4b5563}.present{background:var(--green-bg);color:var(--green)}.absent{background:var(--red-bg);color:var(--red)}.mc{background:var(--purple-bg);color:var(--purple)}.student-panel{background:white;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.04)}.student-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;color:white;background:var(--blue);font-weight:bold;font-size:18px}.student-total{background:white;color:var(--blue);border-radius:999px;padding:5px 10px;font-size:13px}.student-list{padding:10px;max-height:760px;overflow-y:auto}.student-card{border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;margin-bottom:6px;background:white;display:grid;grid-template-columns:1fr;gap:5px}.student-top{display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}.name{font-size:14px;font-weight:bold;color:var(--blue);white-space:nowrap;overflow-x:auto;overflow-y:hidden;text-overflow:clip;max-width:100%;scrollbar-width:thin}.meta{margin-top:0;color:#6b7280;font-size:11px;white-space:nowrap;display:inline;margin-left:6px}.status-pill{border-radius:999px;padding:5px 8px;font-size:12px;font-weight:bold;background:#f3f4f6;color:#374151;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:92px;height:26px;flex-shrink:0}.attendance-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:center}.att-btn{border:none;border-radius:8px;padding:6px 4px;font-size:12px;font-weight:bold;cursor:pointer;width:100%;height:30px}.att-btn.mc{font-size:10px;line-height:1.05}.att-btn.present{background:var(--green-bg);color:var(--green)}.att-btn.absent{background:var(--red-bg);color:var(--red)}.att-btn.mc{background:var(--purple-bg);color:var(--purple)}.reason-input{padding:6px;border:1px solid var(--border);border-radius:7px;font-size:11px;width:100%;min-width:0}.loading,.empty,.error{background:white;border:1px dashed var(--border);border-radius:14px;padding:18px;text-align:center;color:#6b7280}.error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}.footer-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.list-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.list-box{background:white;border:1px solid var(--border);border-radius:14px;padding:12px}.list-box h3{margin:0 0 8px;color:var(--blue);font-size:16px}.name-list{font-size:13px;line-height:1.5;max-height:260px;overflow-y:auto}.name-list div{padding:3px 0;border-bottom:1px solid #f1f5f9}.name-list div:last-child{border-bottom:none}@media(max-width:760px){header h1{font-size:21px}.container{margin:8px auto}.summary-grid{grid-template-columns:1fr}.attendance-row{grid-template-columns:repeat(4,1fr)}.list-summary{grid-template-columns:1fr}.mode-btn,.main-btn{font-size:12px;padding:8px 10px}.student-card{padding:8px}.att-btn{font-size:12px;padding:7px 3px}.att-btn.mc{font-size:9px}}
   </style>
 </head>
 <body>
-<header><h1>Hockey Attendance</h1></header>
+<header><h1>Hockey Attendance Dashboard</h1></header>
 <main class="container">
   <section class="panel">
-    <div class="top-row">
-      <div>
-        <div id="sessionTitle" class="session-title">Loading session...</div>
-        <div id="sessionMeta" class="session-meta"></div>
-      </div>
-      <a class="btn" href="index.html">← Back to Schedule</a>
+    <div class="controls">
+      <div><label for="sessionSelect">Session from Schedule</label><select id="sessionSelect"><option>Loading sessions...</option></select></div>
     </div>
-    <div class="search-row">
-      <input id="searchInput" type="text" placeholder="Search name, class or group..." />
-      <button class="btn primary" onclick="refreshAll()">Refresh</button>
+    <div class="mode-row">
+      <button class="mode-btn active">✅ Attendance Taking</button>
+      <button class="mode-btn" onclick="loadAll()">🔄 Refresh</button>
     </div>
   </section>
 
   <section class="panel">
     <div class="summary-grid">
       <div class="team-summary">
-        <div class="team-title">👦 Boys</div>
-        <div class="team-stats">
-          <div class="stat"><div id="boysTotal" class="num">0</div><div class="label">Total</div></div>
-          <div class="stat present"><div id="boysPresent" class="num">0</div><div class="label">Present</div></div>
-          <div class="stat absent"><div id="boysAbsent" class="num">0</div><div class="label">Absent</div></div>
-          <div class="stat mc"><div id="boysMc" class="num">0</div><div class="label">MC/PL</div></div>
+        <div class="team-summary-title">👦 Boys</div>
+        <div class="team-summary-row">
+          <div class="mini-stat"><div id="boysRecordedCount" class="number">0/0</div><div class="label">Recorded</div></div>
+          <div class="mini-stat present"><div id="boysPresentCount" class="number">0</div><div class="label">Present</div></div>
+          <div class="mini-stat absent"><div id="boysAbsentCount" class="number">0</div><div class="label">Absent</div></div>
+          <div class="mini-stat mc"><div id="boysMcCount" class="number">0</div><div class="label">MC/PL</div></div>
         </div>
       </div>
       <div class="team-summary">
-        <div class="team-title">👧 Girls</div>
-        <div class="team-stats">
-          <div class="stat"><div id="girlsTotal" class="num">0</div><div class="label">Total</div></div>
-          <div class="stat present"><div id="girlsPresent" class="num">0</div><div class="label">Present</div></div>
-          <div class="stat absent"><div id="girlsAbsent" class="num">0</div><div class="label">Absent</div></div>
-          <div class="stat mc"><div id="girlsMc" class="num">0</div><div class="label">MC/PL</div></div>
+        <div class="team-summary-title">👧 Girls</div>
+        <div class="team-summary-row">
+          <div class="mini-stat"><div id="girlsRecordedCount" class="number">0/0</div><div class="label">Recorded</div></div>
+          <div class="mini-stat present"><div id="girlsPresentCount" class="number">0</div><div class="label">Present</div></div>
+          <div class="mini-stat absent"><div id="girlsAbsentCount" class="number">0</div><div class="label">Absent</div></div>
+          <div class="mini-stat mc"><div id="girlsMcCount" class="number">0</div><div class="label">MC/PL</div></div>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="studentList" class="student-list"><div class="loading">Loading students...</div></section>
+  <section class="student-panel">
+    <div class="student-header">🏑 Attendance List <span id="studentTotalPill" class="student-total">Total: 0</span></div>
+    <div id="studentContainer" class="student-list"><div class="loading">Loading students...</div></div>
+  </section>
+
+  <div class="footer-actions">
+    <button class="main-btn primary" onclick="downloadCsv()">⬇ Download CSV</button>
+    <a class="main-btn" href="index.html">← Back to Schedule</a>
+  </div>
+
+  <section class="list-summary">
+    <div class="list-box"><h3>✅ Present</h3><div id="presentList" class="name-list">No one marked present yet.</div></div>
+    <div class="list-box"><h3>❌ Absent / MC/PL</h3><div id="absenceList" class="name-list">No one marked absent or MC/PL yet.</div></div>
+  </section>
 </main>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDocs, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTKW9nlCQK-1ktvEu8at4-KRLjIwbz660",
@@ -64,176 +73,166 @@
     appId: "1:717790587080:web:cd9e1a07d580566f3f1dfd"
   };
 
-  const STUDENT_CSV_URL = "";
-  const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/1nH3Jvm1XFFqA52Sj7I0Swll9DU5yUOqv0ddr21zWEgw/export?format=csv&gid=0";
-  const UPLOAD_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSeWelhY6SsCrPo2g-GGByH33dAS0hx26AygKzQrtOgqWbay3A/viewform?usp=header";
+  const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
+  const STUDENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=1879195237";
+  const MC_PARENT_LETTER_UPLOAD_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSeWelhY6SsCrPo2g-GGByH33dAS0hx26AygKzQrtOgqWbay3A/viewform?usp=header";
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
   let students = [];
+  let sessions = [];
   let attendance = {};
-  let selectedSession = null;
-  let unsubscribe = null;
+  let unsubscribeAttendance = null;
 
-  function escapeHtml(text){return String(text ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
-  function slug(text){return String(text ?? "").trim().replace(/[^a-zA-Z0-9_-]/g,"_")}
-  function studentId(s){return slug(`${s.name}_${s.className}`)}
-  function makeSessionId(item){return `${item.dateISO || item.date}_${item.day || ""}_${item.start || ""}_${item.end || ""}_${item.venue || ""}`.replace(/[^a-zA-Z0-9_-]/g,"_")}
-  function isBoy(s){const g=String(s.gender||"").trim().toUpperCase();const t=`${s.group} ${s.gender}`.toLowerCase();return g==="M"||t.includes("boy")||t.includes("male")}
-  function isGirl(s){const g=String(s.gender||"").trim().toUpperCase();const t=`${s.group} ${s.gender}`.toLowerCase();return g==="F"||t.includes("girl")||t.includes("female")}
+  function csvToRows(text){const rows=[];let row=[],cell="",insideQuotes=false;for(let i=0;i<text.length;i++){const char=text[i],next=text[i+1];if(char==='"'&&insideQuotes&&next==='"'){cell+='"';i++}else if(char==='"'){insideQuotes=!insideQuotes}else if(char===','&&!insideQuotes){row.push(cell.trim());cell=""}else if((char==='\n'||char==='\r')&&!insideQuotes){if(cell||row.length){row.push(cell.trim());rows.push(row);row=[];cell=""}if(char==='\r'&&next==='\n')i++}else{cell+=char}}if(cell||row.length){row.push(cell.trim());rows.push(row)}return rows}
+  function normaliseHeader(header){return String(header||"").toLowerCase().replace(/\s+/g,"")}
+  function escapeHtml(text){return String(text??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+  function safeId(text){return String(text??"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}
 
-  function parseCSV(text){
-    const rows=[];let row=[],cell="",quote=false;
-    for(let i=0;i<text.length;i++){
-      const c=text[i],n=text[i+1];
-      if(c==='"'&&quote&&n==='"'){cell+='"';i++;}
-      else if(c==='"'){quote=!quote;}
-      else if(c===','&&!quote){row.push(cell.trim());cell="";}
-      else if((c==='\n'||c==='\r')&&!quote){if(cell||row.length){row.push(cell.trim());rows.push(row);row=[];cell="";}if(c==='\r'&&n==='\n')i++;}
-      else{cell+=c;}
-    }
-    if(cell||row.length){row.push(cell.trim());rows.push(row);}
-    return rows;
+  function scheduleDateObject(dateText){
+    if(!dateText)return null;
+    const monthMap={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+    const clean=String(dateText).trim();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(clean)){const[y,m,d]=clean.split("-").map(Number);return new Date(y,m-1,d)}
+    const parts=clean.split("-");
+    if(parts.length>=2){const day=Number(parts[0]);const month=monthMap[String(parts[1]).slice(0,3).toLowerCase()];if(!isNaN(day)&&month!==undefined)return new Date(2026,month,day)}
+    const parsed=new Date(clean);return isNaN(parsed.getTime())?null:parsed;
   }
 
-  function normaliseHeader(h){return String(h||"").toLowerCase().replace(/\s+/g,"")}
+  function isTodayOrFuture(item){const d=scheduleDateObject(item.date);if(!d)return true;const today=new Date();today.setHours(0,0,0,0);d.setHours(0,0,0,0);return d>=today;}
+
+  function rowsToScheduleObjects(rows){
+    if(!rows.length)return[];
+    const headers=rows[0].map(normaliseHeader);
+    return rows.slice(1).filter(row=>row.some(cell=>String(cell).trim()!=="")).map(row=>{
+      const obj={};headers.forEach((header,index)=>obj[header]=row[index]||"");
+      const item={term:obj.term||"",date:obj.date||"",day:obj.day||"",start:obj.start||obj.starttime||"",end:obj.end||obj.endtime||"",venue:obj.venue||"",remarks:obj.remarks||"Training",coach:obj.coach||"",tic:obj.tic||""};
+      item.id=safeId(`${item.date}-${item.day}-${item.start}-${item.end}-${item.venue}-${item.remarks}`);
+      item.label=`${item.date} ${item.day} ${item.start}-${item.end} ${item.venue} (${item.remarks})`;
+      return item;
+    }).filter(item=>item.date);
+  }
+
+  function rowsToStudentObjects(rows){
+    if(!rows.length)return[];
+    const headers=rows[0].map(normaliseHeader);
+    return rows.slice(1).filter(row=>row.some(cell=>String(cell).trim()!=="")).map((row,index)=>{
+      const obj={};headers.forEach((header,i)=>obj[header]=row[i]||"");
+      const name=obj.studentname||obj.name||"";
+      const className=obj.class||obj.classname||"";
+      const gender=obj.mf||obj.gender||obj.sex||"";
+      const genderUpper=String(gender).trim().toUpperCase();
+      const group=genderUpper==="M"?"Boys":genderUpper==="F"?"Girls":(obj.group||"");
+      return {id:String(index+1).padStart(2,"0"),name,className,group,gender:genderUpper};
+    }).filter(student=>student.name);
+  }
+
+  async function fetchCsv(url){
+    const response=await fetch(url+"&cachebust="+Date.now(),{cache:"no-store"});
+    if(!response.ok)throw new Error("Unable to load CSV");
+    return response.text();
+  }
+
+  async function loadSchedule(){
+    const csvText=await fetchCsv(SCHEDULE_CSV_URL);
+    sessions=rowsToScheduleObjects(csvToRows(csvText)).filter(isTodayOrFuture).sort((a,b)=>(scheduleDateObject(a.date)||new Date(9999,0,1))-(scheduleDateObject(b.date)||new Date(9999,0,1)));
+    const select=document.getElementById("sessionSelect");
+    const params=new URLSearchParams(window.location.search);
+    const sessionParam=params.get("session");
+    select.innerHTML=sessions.length?sessions.map(s=>`<option value="${s.id}">${escapeHtml(s.label)}</option>`).join(""):`<option value="">No upcoming sessions</option>`;
+    if(sessionParam && sessions.some(s=>s.id===sessionParam))select.value=sessionParam;
+  }
 
   async function loadStudents(){
-    students = [
-      {name:"Leonard Ong Teng Yong (Wang Dingrong)",className:"26A01",group:"Boys",gender:"M"},
-      {name:"Lim Jiaxuan, Jessica Faith",className:"26A02",group:"Girls",gender:"F"},
-      {name:"Ho Wen Jie",className:"26A03",group:"Boys",gender:"M"},
-      {name:"Kan Wing, Lucien",className:"26A03",group:"Boys",gender:"M"},
-      {name:"Lily Anne Timms",className:"26A03",group:"Girls",gender:"F"},
-      {name:"Seeto Zhi Yuan, Benjamin",className:"26A03",group:"Boys",gender:"M"},
-      {name:"Tay Yu Qin Jensen",className:"26A03",group:"Boys",gender:"M"},
-      {name:"Ye Junhao",className:"26A04",group:"Boys",gender:"M"},
-      {name:"Cherlize Agnes Loi Yu Jing",className:"26A05",group:"Girls",gender:"F"},
-      {name:"Low Wei Min",className:"26A05",group:"Girls",gender:"F"},
-      {name:"Chan Yu Qin, Sarah",className:"26A06",group:"Girls",gender:"F"},
-      {name:"Ying Yin Ci",className:"26A06",group:"Girls",gender:"F"},
-      {name:"Axton Lee Yun Heng",className:"26S01",group:"Boys",gender:"M"},
-      {name:"Fan Zicheng",className:"26S01",group:"Boys",gender:"M"},
-      {name:"Avril Natalie Tang Shuet Wing",className:"26S02",group:"Girls",gender:"F"},
-      {name:"Raja Yogatheepan",className:"26S02",group:"Boys",gender:"M"},
-      {name:"Aadit Ajay Wadkar",className:"26S03",group:"Boys",gender:"M"},
-      {name:"Lavonne Teo Swee Hian (Zhang Ruixuan)",className:"26S03",group:"Girls",gender:"F"},
-      {name:"Sarah Fathima Mohamed Habubakkar",className:"26S04",group:"Girls",gender:"F"},
-      {name:"Tan Qi Xuan",className:"26S05",group:"Girls",gender:"F"},
-      {name:"Jaren Choi Yaoxiang (Cui Yaoxiang)",className:"26S06",group:"Boys",gender:"M"},
-      {name:"Moiiesha Nathan-Koh",className:"26S07",group:"Girls",gender:"F"},
-      {name:"Chezelle Shanysse Ten Tse Mynn",className:"26S08",group:"Girls",gender:"F"},
-      {name:"Chia Mei Qi",className:"26S09",group:"Girls",gender:"F"},
-      {name:"Lin Yuanhao",className:"26S09",group:"Boys",gender:"M"},
-      {name:"Low Yu Ren Ray (Liu Yuren)",className:"26S09",group:"Boys",gender:"M"},
-      {name:"Hee Xin Rui (Xu Xinrui)",className:"26S14",group:"Girls",gender:"F"},
-      {name:"Justin Wang Haoyang",className:"26S14",group:"Boys",gender:"M"},
-      {name:"Yogalakshme Balamurugan",className:"26S14",group:"Girls",gender:"F"},
-      {name:"Kor Shi Mun, Rachel",className:"26S15",group:"Girls",gender:"F"},
-      {name:"Natasha Ann Yong",className:"26S15",group:"Girls",gender:"F"},
-      {name:"Leong Jim",className:"26S17",group:"Boys",gender:"M"},
-      {name:"Sarah Tan Li Ying",className:"26S17",group:"Girls",gender:"F"},
-      {name:"Faith Huang Jia'En",className:"26S18",group:"Girls",gender:"F"},
-      {name:"Matias Ang Suan Kai",className:"26S20",group:"Boys",gender:"M"},
-      {name:"Gu Jiachang",className:"26S21",group:"Boys",gender:"M"},
-      {name:"Jairus Tan Shi Zhe (Chen Shizhe)",className:"26S21",group:"Boys",gender:"M"},
-      {name:"Tan Wen Shan, Colin (Chen Wenshan)",className:"26S21",group:"Boys",gender:"M"},
-      {name:"Andre Zhang Yuhan",className:"26S22",group:"Boys",gender:"M"},
-      {name:"Reyhaan Jett Bhandari",className:"26S22",group:"Boys",gender:"M"},
-      {name:"Thien Kai Xin Christie",className:"26S22",group:"Girls",gender:"F"},
-      {name:"Ng Wei Jun (Huang Weijun)",className:"26S23",group:"Girls",gender:"F"}
-    ];
+    const csvText=await fetchCsv(STUDENT_CSV_URL);
+    students=rowsToStudentObjects(csvToRows(csvText));
   }
 
-  async function loadSession(){
-    const params = new URLSearchParams(window.location.search);
-    const sessionParam = params.get("session");
-    const res = await fetch(SCHEDULE_CSV_URL + "&cache=" + Date.now());
-    const text = await res.text();
-    const rows = parseCSV(text);
-    const headers = rows[0].map(normaliseHeader);
-    const sessions = rows.slice(1).filter(r=>r.some(c=>String(c).trim()!=="")).map(row=>{
-      const obj={}; headers.forEach((h,i)=>obj[h]=row[i]||"");
-      const item = {term:obj.term||"",date:obj.date||"",dateISO:obj.dateiso||"",day:obj.day||"",start:obj.starttime||obj.start||"",end:obj.endtime||obj.end||"",venue:obj.venue||"",remarks:obj.remarks||"Training",coach:obj.coach||"",tic:obj.tic||""};
-      item.id = makeSessionId(item);
-      return item;
-    });
-    selectedSession = sessions.find(s=>s.id===sessionParam) || sessions[0] || {id:"manual_session",date:"",day:"",start:"",end:"",venue:"",remarks:"Attendance"};
-    document.getElementById("sessionTitle").textContent = `${selectedSession.date} ${selectedSession.day} ${selectedSession.start}–${selectedSession.end}`;
-    document.getElementById("sessionMeta").textContent = `${selectedSession.venue || ""} ${selectedSession.remarks ? "• " + selectedSession.remarks : ""}`;
+  function selectedSession(){const id=document.getElementById("sessionSelect").value;return sessions.find(s=>s.id===id)||null;}
+  function isBoy(student){return String(student.gender).toUpperCase()==="M"||student.group==="Boys"}
+  function isGirl(student){return String(student.gender).toUpperCase()==="F"||student.group==="Girls"}
+
+  function startAttendanceListener(){
+    if(unsubscribeAttendance)unsubscribeAttendance();
+    const session=selectedSession();
+    attendance={};
+    if(!session){renderStudents();return;}
+    unsubscribeAttendance=onSnapshot(collection(db,"attendance",session.id,"records"),snap=>{attendance={};snap.docs.forEach(d=>attendance[d.id]=d.data());renderStudents();},err=>{document.getElementById("studentContainer").innerHTML='<div class="error">Firebase read failed. Check Firestore test mode/rules.</div>';console.error(err);});
   }
 
-  function listenAttendance(){
-    if(unsubscribe) unsubscribe();
-    const recordsRef = collection(db,"attendance",selectedSession.id,"records");
-    unsubscribe = onSnapshot(recordsRef, snap=>{
-      attendance = {};
-      snap.forEach(d=>attendance[d.id]=d.data());
-      renderStudents();
-      updateSummary();
-    }, err=>{
-      console.error(err);
-      document.getElementById("studentList").innerHTML = `<div class="error">Firebase read failed. Check Firestore test mode/rules.</div>`;
-    });
-  }
-
-  async function markAttendance(index,status){
-    const s = students[index];
-    const id = studentId(s);
-    const reasonInput = document.getElementById(`reason-${index}`);
-    const reason = reasonInput ? reasonInput.value : "";
-    const payload = {studentId:id,name:s.name,className:s.className,group:s.group,gender:s.gender,status,reason,sessionId:selectedSession.id,session:selectedSession,timestamp:new Date().toLocaleString("en-SG",{hour12:false}),updatedAt:serverTimestamp()};
-    await setDoc(doc(db,"attendance",selectedSession.id,"records",id), payload, {merge:true});
-  }
-
-  async function saveReason(index,value){
-    const s = students[index];
-    const id = studentId(s);
-    const existing = attendance[id] || {};
-    await setDoc(doc(db,"attendance",selectedSession.id,"records",id), {studentId:id,name:s.name,className:s.className,group:s.group,gender:s.gender,status:existing.status||"",reason:value,sessionId:selectedSession.id,session:selectedSession,timestamp:new Date().toLocaleString("en-SG",{hour12:false}),updatedAt:serverTimestamp()}, {merge:true});
+  function cardHtml(student){
+    const record=attendance[student.id]||{};
+    const status=record.status||"Unmarked";
+    const reason=record.reason||"";
+    const statusClass=status.toLowerCase().replace(/[^a-z]/g,"");
+    return `<article class="student-card"><div class="student-top"><div class="name">${escapeHtml(student.name)} <span class="meta">${escapeHtml(student.className||"No class")} • ${escapeHtml(student.group)}</span></div><div class="status-pill ${statusClass}">${escapeHtml(status)}</div></div><div class="attendance-row"><button class="att-btn present" onclick="markAttendance('${student.id}', 'Present')">✅</button><button class="att-btn absent" onclick="markAttendance('${student.id}', 'Absent')">❌</button><button class="att-btn mc" onclick="markAttendance('${student.id}', 'MC/Parent Letter'); window.open('${MC_PARENT_LETTER_UPLOAD_LINK}', '_blank')">MC/PL</button><input class="reason-input" id="reason-${student.id}" value="${escapeHtml(reason)}" placeholder="Reason for Absence" onchange="saveReason('${student.id}', this.value)" /></div></article>`;
   }
 
   function renderStudents(){
-    const q = document.getElementById("searchInput").value.toLowerCase();
-    const filtered = students.filter(s=>`${s.name} ${s.className} ${s.group}`.toLowerCase().includes(q));
-    const list = document.getElementById("studentList");
-    if(!filtered.length){list.innerHTML=`<div class="empty">No students found.</div>`;return;}
-    list.innerHTML = filtered.map(s=>{
-      const index = students.indexOf(s);
-      const record = attendance[studentId(s)] || {};
-      const status = record.status || "Unmarked";
-      return `<article class="student-card"><div class="student-top"><div><div class="name">${escapeHtml(s.name)}</div><div class="meta">${escapeHtml(s.className)} ${s.group?"• "+escapeHtml(s.group):""}</div></div><div class="pill ${status==='Present'?'present':status==='Absent'?'absent':status==='MC/Parent Letter'?'mc':''}">${escapeHtml(status)}</div></div><div class="actions"><button class="att-btn present" onclick="markAttendance(${index}, 'Present')">✅ Present</button><button class="att-btn absent" onclick="markAttendance(${index}, 'Absent')">❌ Absent</button><button class="att-btn mc" onclick="markAttendance(${index}, 'MC/Parent Letter')">📄 MC/PL</button></div><div class="details"><input class="reason" id="reason-${index}" value="${escapeHtml(record.reason||"")}" placeholder="Reason for absence" onchange="saveReason(${index}, this.value)" /><a class="btn" href="${UPLOAD_LINK}" target="_blank">Upload</a></div><div class="timestamp">${record.timestamp?"Updated: "+escapeHtml(record.timestamp):"Not marked yet"}</div></article>`;
-    }).join("");
+    document.getElementById("studentContainer").innerHTML=students.length?students.map(cardHtml).join(""):'<div class="empty">No students found.</div>';
+    document.getElementById("studentTotalPill").textContent=`Total: ${students.length}`;
+    updateSummary();
   }
 
   function updateSummary(){
-    const boys = students.filter(isBoy), girls = students.filter(isGirl);
-    const count = (arr,status)=>arr.filter(s=>(attendance[studentId(s)]||{}).status===status).length;
-    document.getElementById("boysTotal").textContent=boys.length;
-    document.getElementById("girlsTotal").textContent=girls.length;
-    document.getElementById("boysPresent").textContent=count(boys,"Present");
-    document.getElementById("girlsPresent").textContent=count(girls,"Present");
-    document.getElementById("boysAbsent").textContent=count(boys,"Absent");
-    document.getElementById("girlsAbsent").textContent=count(girls,"Absent");
-    document.getElementById("boysMc").textContent=count(boys,"MC/Parent Letter");
-    document.getElementById("girlsMc").textContent=count(girls,"MC/Parent Letter");
+    const boys=students.filter(isBoy),girls=students.filter(isGirl);
+    const count=(list,status)=>list.filter(s=>(attendance[s.id]?.status||"")===status).length;
+    const recorded=list=>list.filter(s=>["Present","Absent","MC/Parent Letter"].includes(attendance[s.id]?.status||"")).length;
+    document.getElementById("boysRecordedCount").textContent=`${recorded(boys)}/${boys.length}`;
+    document.getElementById("girlsRecordedCount").textContent=`${recorded(girls)}/${girls.length}`;
+    document.getElementById("boysPresentCount").textContent=count(boys,"Present");
+    document.getElementById("girlsPresentCount").textContent=count(girls,"Present");
+    document.getElementById("boysAbsentCount").textContent=count(boys,"Absent");
+    document.getElementById("girlsAbsentCount").textContent=count(girls,"Absent");
+    document.getElementById("boysMcCount").textContent=count(boys,"MC/Parent Letter");
+    document.getElementById("girlsMcCount").textContent=count(girls,"MC/Parent Letter");
+    updateLists();
   }
 
-  async function refreshAll(){
-    document.getElementById("studentList").innerHTML = `<div class="loading">Loading students...</div>`;
-    await loadSession();
-    await loadStudents();
-    renderStudents();
-    updateSummary();
-    listenAttendance();
+  function updateLists(){
+    const present=students.filter(s=>(attendance[s.id]?.status||"")==="Present");
+    const absence=students.filter(s=>["Absent","MC/Parent Letter"].includes(attendance[s.id]?.status||""));
+    const presentBox=document.getElementById("presentList");
+    const absenceBox=document.getElementById("absenceList");
+    presentBox.innerHTML=present.length?present.map(s=>`<div>${escapeHtml(s.name)} <strong>(${escapeHtml(s.className)}, ${escapeHtml(s.group)})</strong></div>`).join(""):"No one marked present yet.";
+    absenceBox.innerHTML=absence.length?absence.map(s=>{const r=attendance[s.id]||{};return `<div>${escapeHtml(s.name)} <strong>(${escapeHtml(r.status||"")})</strong>${r.reason?" — "+escapeHtml(r.reason):""}</div>`}).join(""):"No one marked absent or MC/PL yet.";
   }
 
-  document.getElementById("searchInput").addEventListener("input",renderStudents);
-  window.markAttendance = markAttendance;
-  window.saveReason = saveReason;
-  window.refreshAll = refreshAll;
-  refreshAll();
+  async function markAttendance(studentId,status){
+    const session=selectedSession();
+    const student=students.find(s=>s.id===studentId);
+    if(!session||!student){alert("Select a valid session first.");return;}
+    const reason=document.getElementById(`reason-${studentId}`)?.value||attendance[studentId]?.reason||"";
+    await setDoc(doc(db,"attendance",session.id,"records",studentId),{studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
+  }
+
+  async function saveReason(studentId,reason){
+    const session=selectedSession();
+    const student=students.find(s=>s.id===studentId);
+    if(!session||!student)return;
+    await setDoc(doc(db,"attendance",session.id,"records",studentId),{studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status:attendance[studentId]?.status||"Unmarked",reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
+  }
+
+  function downloadCsv(){
+    const session=selectedSession();
+    const rows=[["Session","Name","Class","Group","Status","Reason","Updated At"]];
+    students.forEach(student=>{const record=attendance[student.id]||{};rows.push([session?.label||"",student.name,student.className,student.group,record.status||"Unmarked",record.reason||"",record.updatedAt||""]);});
+    const csv=rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
+    const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`attendance_${session?.id||"session"}.csv`;a.click();URL.revokeObjectURL(url);
+  }
+
+  async function loadAll(){
+    document.getElementById("studentContainer").innerHTML='<div class="loading">Loading students...</div>';
+    try{await loadSchedule();await loadStudents();startAttendanceListener();renderStudents();}catch(err){console.error(err);document.getElementById("studentContainer").innerHTML='<div class="error">Unable to refresh attendance data. Check Google Sheet sharing/publishing.</div>';}
+  }
+
+  window.markAttendance=markAttendance;
+  window.saveReason=saveReason;
+  window.loadAll=loadAll;
+  window.downloadCsv=downloadCsv;
+  document.getElementById("sessionSelect").addEventListener("change",startAttendanceListener);
+  loadAll();
 </script>
 </body>
 </html>
