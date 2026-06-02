@@ -245,7 +245,8 @@ function rowsToScheduleObjects(rows){
       remarks:obj.remarks||"Training",
       coach:obj.coach||"",
       tic:obj.tic||"",
-      mapLink:obj.maplink||""
+      standby:obj.standby||obj.j||""
+    mapLink:obj.maplink||""
     };
     item.id=safeId(`${item.date}-${item.day}-${item.start}-${item.end}-${item.venue}-${item.remarks}`);
     return item;
@@ -293,9 +294,20 @@ function renderSchedule(){
           <div class="card-top"><div><div class="date">${escapeHtml(item.date)}</div><span class="tag">${escapeHtml(item.start)}–${escapeHtml(item.end)}</span></div><div class="day">${escapeHtml(item.day)}</div></div>
           <div class="info"><span>Venue</span><span>${escapeHtml(item.venue)}</span></div>
           <div class="info"><span>Remarks</span><span>${escapeHtml(item.remarks)}</span></div>
-          <div class="info"><span>Coach</span><span>${escapeHtml(item.coach||"TBC")}</span></div>
-          <div class="info"><span>TIC</span><span>${escapeHtml(item.tic||"TBC")}</span></div>
-          <div class="card-actions"><a class="small-btn" href="${makeMapLink(item)}" target="_blank">📍 Map</a><a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">📅 Add</a><a class="small-btn" href="attendance.html?session=${encodeURIComponent(item.id)}">✅ Attendance</a></div>
+<div class="info">
+  <span>Coach</span>
+  <span>${escapeHtml(item.coach||"TBC")}</span>
+</div>
+
+<div class="info">
+  <span>TIC</span>
+  <span>${escapeHtml(item.tic||"TBC")}</span>
+</div>
+
+<div class="info">
+  <span>Standby</span>
+  <span>${escapeHtml(item.standby||"-")}</span>
+</div>          <div class="card-actions"><a class="small-btn" href="${makeMapLink(item)}" target="_blank">📍 Map</a><a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">📅 Add</a><a class="small-btn" href="attendance.html?session=${encodeURIComponent(item.id)}">✅ Attendance</a></div>
         </article>
       `).join("")}
     </div>
