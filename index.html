@@ -3,340 +3,149 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hockey Schedule</title>
+  <title>Hockey Team Schedule</title>
   <style>
-    :root{--blue:#123c69;--blue2:#1f5f99;--border:#d1d5db;--dark:#1f2937;--red:#b91c1c;--red-bg:#fee2e2;--green:#15803d;--green-bg:#dcfce7}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}
-    header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:18px 12px;text-align:center}
-    header h1{margin:0;font-size:24px}
-    .container{max-width:1180px;margin:12px auto;padding:0 10px 28px}
-    .panel{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}
-
-    .announcement-panel{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}
-    .announcement-title{font-size:18px;font-weight:bold;color:var(--blue);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-    .announcement-container{height:145px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;padding:8px}
-    .announcement-item{background:white;border-left:4px solid var(--blue);border-radius:8px;padding:10px;margin-bottom:8px}
-    .announcement-date{font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:bold}
-    .announcement-text{font-size:14px;line-height:1.5}
-    .delete-announcement{margin-top:8px;border:none;border-radius:999px;background:var(--red-bg);color:var(--red);font-weight:bold;padding:6px 10px;cursor:pointer;font-size:12px;display:none}
-    body.admin-mode .delete-announcement{display:inline-block}
-
-    .main-btn{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:bold;cursor:pointer;background:white;color:var(--blue);font-size:13px;text-decoration:none;display:inline-block}
-    .main-btn.primary{background:var(--blue);color:white;border-color:var(--blue)}
-    .main-btn.danger{background:var(--red-bg);color:var(--red);border-color:#fecaca}
-    .schedule-list{display:grid;gap:10px}
-    .schedule-card{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}
-    .schedule-date{font-size:17px;font-weight:bold;color:var(--blue)}
-    .schedule-detail{font-size:14px;line-height:1.5;margin-top:6px;color:#374151}
-    .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-    .empty,.loading,.error{background:white;border:1px dashed var(--border);border-radius:14px;padding:18px;text-align:center;color:#6b7280}
-    .error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}
-    label{display:block;font-size:12px;font-weight:bold;color:#4b5563;margin-bottom:5px}
-    input,textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}
-    textarea{min-height:90px;resize:vertical}
-    .form-grid{display:grid;grid-template-columns:1fr;gap:10px}
-    .small-note{font-size:12px;color:#6b7280;margin-top:6px}
-    @media(max-width:760px){header h1{font-size:21px}.container{margin:8px auto}.main-btn{font-size:12px;padding:8px 10px}.announcement-container{height:150px}}
+    :root{--blue:#123c69;--blue2:#1f5f99;--light:#e8f1fb;--gold:#f6c453;--dark:#1f2937;--border:#d1d5db}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:28px 16px;text-align:center}header h1{margin:0;font-size:30px}.container{max-width:1100px;margin:20px auto;padding:0 14px 36px}.toolbar{background:white;border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.05);margin-bottom:18px}label{font-size:12px;font-weight:bold;color:#4b5563;display:block;margin-bottom:5px}input{width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}.quick-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.btn{border:none;border-radius:999px;padding:9px 13px;background:var(--blue);color:white;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:13px}.btn.secondary{background:white;color:var(--blue);border:1px solid var(--border)}.term-title{margin:26px 0 10px;font-size:25px;color:var(--blue)}.schedule-grid{display:flex;flex-direction:column;gap:14px;max-height:900px;overflow-y:auto;padding-right:6px}.schedule-grid::-webkit-scrollbar{width:8px}.schedule-grid::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}.schedule-grid::-webkit-scrollbar-track{background:#eef2f7;border-radius:999px}.card{background:white;border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.05);width:100%}.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}.date{font-size:21px;font-weight:bold;color:var(--blue)}.day{background:var(--light);color:var(--blue);padding:6px 10px;border-radius:999px;font-size:13px;font-weight:bold}.info{display:grid;grid-template-columns:86px 1fr;gap:7px;margin:8px 0;font-size:14px}.info span:first-child{color:#6b7280;font-weight:bold}.tag{display:inline-block;background:#fff7df;color:#7a5200;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:bold;margin-top:4px}.card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;border-top:1px solid #eee;padding-top:12px}.small-btn{border-radius:10px;border:1px solid var(--border);padding:8px 10px;background:white;color:var(--blue);font-weight:bold;cursor:pointer;text-decoration:none;font-size:13px}.empty,.loading,.error{background:white;border:1px dashed var(--border);border-radius:16px;padding:20px;text-align:center;color:#6b7280}.error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}@media(max-width:760px){header h1{font-size:25px}.term-title{font-size:22px}}
   </style>
 </head>
-
 <body>
-<header><h1>Hockey Schedule</h1></header>
-
+<header><h1>Hockey Team Schedule 2026</h1></header>
 <main class="container">
-
-  <section class="announcement-panel">
-    <div class="announcement-title">
-      <span>📢 Announcements Board</span>
-      <button class="main-btn" onclick="toggleAdminMode()">Admin</button>
-    </div>
-    <div id="announcementContainer" class="announcement-container">
-      <div class="loading">Loading announcements...</div>
-    </div>
+  <section class="toolbar">
+    <label for="searchInput">Search</label>
+    <input id="searchInput" type="text" placeholder="Search date, venue, remarks..." />
   </section>
 
-  <section class="panel">
-    <div class="actions">
-      <button class="main-btn primary" onclick="loadSchedule()">🔄 Refresh Schedule</button>
-      <a class="main-btn" href="attendance.html">✅ Go to Attendance</a>
-    </div>
-  </section>
+  <div class="quick-actions">
+    <a class="btn" href="attendance.html">✅ Take Attendance</a>
+    <button class="btn secondary" onclick="loadSchedule()">🔄 Refresh</button>
+    <button class="btn secondary" onclick="window.print()">🖨 Print Schedule</button>
+  </div>
 
-  <section id="scheduleContainer" class="schedule-list">
-    <div class="loading">Loading schedule...</div>
-  </section>
-
-  <section class="panel">
-    <h2 style="margin:0 0 10px;color:var(--blue);font-size:18px">➕ Add Announcement</h2>
-    <div class="form-grid">
-      <div>
-        <label for="announcementDate">Date / Label</label>
-        <input id="announcementDate" placeholder="e.g. 3 Jun 2026 or Reminder" />
-      </div>
-      <div>
-        <label for="announcementText">Announcement</label>
-        <textarea id="announcementText" placeholder="Type announcement here..."></textarea>
-      </div>
-      <div>
-        <button class="main-btn primary" onclick="addAnnouncement()">Add Announcement</button>
-        <button class="main-btn danger" onclick="clearAnnouncementForm()">Clear</button>
-      </div>
-    </div>
-    <div class="small-note">Admin PIN required: 0804</div>
-  </section>
-
+  <section id="scheduleContainer"><div class="loading">Loading schedule...</div></section>
 </main>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, doc, addDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+<script>
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
+let schedule = [];
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBTKW9nlCQK-1ktvEu8at4-KRLjIwbz660",
-    authDomain: "saintshockeyattendance.firebaseapp.com",
-    projectId: "saintshockeyattendance",
-    storageBucket: "saintshockeyattendance.firebasestorage.app",
-    messagingSenderId: "717790587080",
-    appId: "1:717790587080:web:cd9e1a07d580566f3f1dfd"
-  };
+const fallbackMapLinks = {
+  "PSOEB": "https://www.google.com/maps/search/?api=1&query=PSOEB",
+  "Sengkang": "https://www.google.com/maps/search/?api=1&query=Sengkang+Hockey+Pitch",
+  "School": "https://www.google.com/maps/search/?api=1&query=St+Andrew's+Junior+College"
+};
 
-  const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
-  const ADMIN_PIN = "0804";
+function escapeHtml(text){return String(text ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function safeId(text){return String(text ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}
+function normaliseHeader(header){return String(header||"").toLowerCase().replace(/\s+/g,"")}
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  let adminMode = false;
-
-  function escapeHtml(text){
-    return String(text??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+function csvToRows(text){
+  const rows=[];let row=[],cell="",insideQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const char=text[i], next=text[i+1];
+    if(char==='"'&&insideQuotes&&next==='"'){cell+='"';i++}
+    else if(char==='"'){insideQuotes=!insideQuotes}
+    else if(char===','&&!insideQuotes){row.push(cell.trim());cell=""}
+    else if((char==='\n'||char==='\r')&&!insideQuotes){
+      if(cell||row.length){row.push(cell.trim());rows.push(row);row=[];cell=""}
+      if(char==='\r'&&next==='\n')i++;
+    } else {cell+=char}
   }
+  if(cell||row.length){row.push(cell.trim());rows.push(row)}
+  return rows;
+}
 
-  function safeId(text){
-    return String(text??"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
-  }
+function scheduleDateObject(dateText){
+  if(!dateText)return null;
+  const monthMap={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+  const clean=String(dateText).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(clean)){const[y,m,d]=clean.split("-").map(Number);return new Date(y,m-1,d)}
+  const parts=clean.split("-");
+  if(parts.length>=2){const day=Number(parts[0]);const month=monthMap[String(parts[1]).slice(0,3).toLowerCase()];if(!isNaN(day)&&month!==undefined)return new Date(2026,month,day)}
+  const parsed=new Date(clean);return isNaN(parsed.getTime())?null:parsed;
+}
 
-  function csvToRows(text){
-    const rows=[];let row=[],cell="",insideQuotes=false;
-    for(let i=0;i<text.length;i++){
-      const char=text[i],next=text[i+1];
-      if(char==='"'&&insideQuotes&&next==='"'){cell+='"';i++}
-      else if(char==='"'){insideQuotes=!insideQuotes}
-      else if(char===','&&!insideQuotes){row.push(cell.trim());cell=""}
-      else if((char==='\n'||char==='\r')&&!insideQuotes){
-        if(cell||row.length){row.push(cell.trim());rows.push(row);row=[];cell=""}
-        if(char==='\r'&&next==='\n')i++;
-      }else{cell+=char}
-    }
-    if(cell||row.length){row.push(cell.trim());rows.push(row)}
-    return rows;
-  }
+function isTodayOrFuture(item){
+  const d=scheduleDateObject(item.date);
+  if(!d)return true;
+  const today=new Date();today.setHours(0,0,0,0);d.setHours(0,0,0,0);
+  return d>=today;
+}
 
-  function normaliseHeader(header){
-    return String(header||"").toLowerCase().replace(/\s+/g,"");
-  }
+function rowsToScheduleObjects(rows){
+  if(!rows.length)return[];
+  const headers=rows[0].map(normaliseHeader);
+  return rows.slice(1).filter(row=>row.some(cell=>String(cell).trim()!=="")).map(row=>{
+    const obj={};headers.forEach((header,index)=>obj[header]=row[index]||"");
+    const item={
+      term:obj.term||"2026 Schedule",
+      date:obj.date||"",
+      day:obj.day||"",
+      start:obj.start||obj.starttime||"",
+      end:obj.end||obj.endtime||"",
+      venue:obj.venue||"",
+      remarks:obj.remarks||"Training",
+      coach:obj.coach||"",
+      tic:obj.tic||"",
+      mapLink:obj.maplink||""
+    };
+    item.id=safeId(`${item.date}-${item.day}-${item.start}-${item.end}-${item.venue}-${item.remarks}`);
+    return item;
+  }).filter(item=>item.date);
+}
 
-  function scheduleDateObject(dateText){
-    if(!dateText)return null;
-    const monthMap={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-    const clean=String(dateText).trim();
+function makeMapLink(item){return item.mapLink || fallbackMapLinks[item.venue] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.venue||"")}`}
+function makeCalendarLink(item){
+  const d=scheduleDateObject(item.date);
+  const date=d?`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`:"20260101";
+  const start=`${date}T${item.start||"0000"}00`;
+  const end=`${date}T${item.end||"0100"}00`;
+  const title=encodeURIComponent(`Hockey ${item.remarks||"Training"}`);
+  const location=encodeURIComponent(item.venue||"");
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${location}`;
+}
 
-    if(/^\d{4}-\d{2}-\d{2}$/.test(clean)){
-      const[y,m,d]=clean.split("-").map(Number);
-      return new Date(y,m-1,d);
-    }
-
-    const parts=clean.split("-");
-    if(parts.length>=2){
-      const day=Number(parts[0]);
-      const month=monthMap[String(parts[1]).slice(0,3).toLowerCase()];
-      if(!isNaN(day)&&month!==undefined)return new Date(2026,month,day);
-    }
-
-    const parsed=new Date(clean);
-    return isNaN(parsed.getTime())?null:parsed;
-  }
-
-  function isTodayOrFuture(item){
-    const d=scheduleDateObject(item.date);
-    if(!d)return true;
-    const today=new Date();
-    today.setHours(0,0,0,0);
-    d.setHours(0,0,0,0);
-    return d>=today;
-  }
-
-  function rowsToScheduleObjects(rows){
-    if(!rows.length)return[];
-    const headers=rows[0].map(normaliseHeader);
-
-    return rows.slice(1)
-      .filter(row=>row.some(cell=>String(cell).trim()!==""))
-      .map(row=>{
-        const obj={};
-        headers.forEach((header,index)=>obj[header]=row[index]||"");
-
-        const item={
-          term:obj.term||"",
-          date:obj.date||"",
-          day:obj.day||"",
-          start:obj.start||obj.starttime||"",
-          end:obj.end||obj.endtime||"",
-          venue:obj.venue||"",
-          remarks:obj.remarks||"Training",
-          coach:obj.coach||"",
-          tic:obj.tic||""
-        };
-
-        item.id=safeId(`${item.date}-${item.day}-${item.start}-${item.end}-${item.venue}-${item.remarks}`);
-        item.label=`${item.date} ${item.day} ${item.start}-${item.end} ${item.venue} (${item.remarks})`;
-        return item;
-      })
-      .filter(item=>item.date);
-  }
-
-  async function fetchCsv(url){
-    const response=await fetch(url+"&cachebust="+Date.now(),{cache:"no-store"});
+async function loadSchedule(){
+  const container=document.getElementById("scheduleContainer");
+  container.innerHTML='<div class="loading">Loading schedule...</div>';
+  try{
+    const response=await fetch(SHEET_CSV_URL + "&cachebust=" + Date.now(), {cache:"no-store"});
     if(!response.ok)throw new Error("Unable to load CSV");
-    return response.text();
+    const csvText=await response.text();
+    schedule=rowsToScheduleObjects(csvToRows(csvText)).filter(isTodayOrFuture).sort((a,b)=>(scheduleDateObject(a.date)||new Date(9999,0,1))-(scheduleDateObject(b.date)||new Date(9999,0,1)));
+    renderSchedule();
+  }catch(err){
+    console.error(err);
+    container.innerHTML='<div class="error">Unable to load Google Sheet schedule. Make sure the sheet is shared/published and try Refresh.</div>';
   }
+}
 
-  async function loadSchedule(){
-    const container=document.getElementById("scheduleContainer");
-    container.innerHTML='<div class="loading">Loading schedule...</div>';
-
-    try{
-      const csvText=await fetchCsv(SCHEDULE_CSV_URL);
-      const sessions=rowsToScheduleObjects(csvToRows(csvText))
-        .filter(isTodayOrFuture)
-        .sort((a,b)=>(scheduleDateObject(a.date)||new Date(9999,0,1))-(scheduleDateObject(b.date)||new Date(9999,0,1)));
-
-      if(!sessions.length){
-        container.innerHTML='<div class="empty">No upcoming sessions found.</div>';
-        return;
-      }
-
-      container.innerHTML=sessions.map(s=>`
-        <article class="schedule-card">
-          <div class="schedule-date">${escapeHtml(s.date)} ${escapeHtml(s.day)}</div>
-          <div class="schedule-detail">
-            <strong>Time:</strong> ${escapeHtml(s.start)}-${escapeHtml(s.end)}<br>
-            <strong>Venue:</strong> ${escapeHtml(s.venue)}<br>
-            <strong>Remarks:</strong> ${escapeHtml(s.remarks)}<br>
-            ${s.coach?`<strong>Coach:</strong> ${escapeHtml(s.coach)}<br>`:""}
-            ${s.tic?`<strong>TIC:</strong> ${escapeHtml(s.tic)}<br>`:""}
-          </div>
-          <div class="actions">
-            <a class="main-btn primary" href="attendance.html?session=${encodeURIComponent(s.id)}">Take Attendance</a>
-          </div>
+function renderSchedule(){
+  const searchValue=document.getElementById("searchInput").value.toLowerCase();
+  const filtered=schedule.filter(item=>Object.values(item).join(" ").toLowerCase().includes(searchValue));
+  const grouped=filtered.reduce((acc,item)=>{const term=item.term||"Schedule";if(!acc[term])acc[term]=[];acc[term].push(item);return acc;},{});
+  const container=document.getElementById("scheduleContainer");
+  if(filtered.length===0){container.innerHTML='<div class="empty">No upcoming sessions found.</div>';return;}
+  container.innerHTML=Object.keys(grouped).map(term=>`
+    <h2 class="term-title">${escapeHtml(term)}</h2>
+    <div class="schedule-grid">
+      ${grouped[term].map(item=>`
+        <article class="card">
+          <div class="card-top"><div><div class="date">${escapeHtml(item.date)}</div><span class="tag">${escapeHtml(item.start)}–${escapeHtml(item.end)}</span></div><div class="day">${escapeHtml(item.day)}</div></div>
+          <div class="info"><span>Venue</span><span>${escapeHtml(item.venue)}</span></div>
+          <div class="info"><span>Remarks</span><span>${escapeHtml(item.remarks)}</span></div>
+          <div class="info"><span>Coach</span><span>${escapeHtml(item.coach||"TBC")}</span></div>
+          <div class="info"><span>TIC</span><span>${escapeHtml(item.tic||"TBC")}</span></div>
+          <div class="card-actions"><a class="small-btn" href="${makeMapLink(item)}" target="_blank">📍 Map</a><a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">📅 Add</a><a class="small-btn" href="attendance.html?session=${encodeURIComponent(item.id)}">✅ Attendance</a></div>
         </article>
-      `).join("");
+      `).join("")}
+    </div>
+  `).join("");
+}
 
-    }catch(err){
-      console.error(err);
-      container.innerHTML='<div class="error">Unable to load schedule. Check Google Sheet sharing/publishing.</div>';
-    }
-  }
-
-  function listenAnnouncements(){
-    const q=query(collection(db,"announcements"),orderBy("createdAt","desc"));
-
-    onSnapshot(q,snap=>{
-      const box=document.getElementById("announcementContainer");
-
-      if(snap.empty){
-        box.innerHTML=`
-          <div class="announcement-item">
-            <div class="announcement-date">No announcements yet</div>
-            <div class="announcement-text">Announcements will appear here.</div>
-          </div>
-        `;
-        return;
-      }
-
-      box.innerHTML=snap.docs.map(d=>{
-        const a=d.data();
-        return `
-          <div class="announcement-item">
-            <div class="announcement-date">${escapeHtml(a.date || "Announcement")}</div>
-            <div class="announcement-text">${escapeHtml(a.text || "")}</div>
-            <button class="delete-announcement" onclick="deleteAnnouncement('${d.id}')">Delete</button>
-          </div>
-        `;
-      }).join("");
-    },err=>{
-      console.error(err);
-      document.getElementById("announcementContainer").innerHTML='<div class="error">Unable to load announcements.</div>';
-    });
-  }
-
-  function requireAdminPin(){
-    const pin=prompt("Enter Admin PIN:");
-    return pin===ADMIN_PIN;
-  }
-
-  async function addAnnouncement(){
-    if(!requireAdminPin()){
-      alert("Incorrect PIN.");
-      return;
-    }
-
-    const date=document.getElementById("announcementDate").value.trim();
-    const text=document.getElementById("announcementText").value.trim();
-
-    if(!text){
-      alert("Please type an announcement.");
-      return;
-    }
-
-    await addDoc(collection(db,"announcements"),{
-      date:date || "Announcement",
-      text,
-      createdAt:serverTimestamp()
-    });
-
-    clearAnnouncementForm();
-  }
-
-  function clearAnnouncementForm(){
-    document.getElementById("announcementDate").value="";
-    document.getElementById("announcementText").value="";
-  }
-
-  function toggleAdminMode(){
-    if(!adminMode){
-      if(!requireAdminPin()){
-        alert("Incorrect PIN.");
-        return;
-      }
-      adminMode=true;
-      document.body.classList.add("admin-mode");
-    }else{
-      adminMode=false;
-      document.body.classList.remove("admin-mode");
-    }
-  }
-
-  async function deleteAnnouncement(id){
-    if(!requireAdminPin()){
-      alert("Incorrect PIN.");
-      return;
-    }
-
-    if(confirm("Delete this announcement?")){
-      await deleteDoc(doc(db,"announcements",id));
-    }
-  }
-
-  window.loadSchedule=loadSchedule;
-  window.addAnnouncement=addAnnouncement;
-  window.clearAnnouncementForm=clearAnnouncementForm;
-  window.toggleAdminMode=toggleAdminMode;
-  window.deleteAnnouncement=deleteAnnouncement;
-
-  listenAnnouncements();
-  loadSchedule();
+document.getElementById("searchInput").addEventListener("input",renderSchedule);
+window.loadSchedule=loadSchedule;
+loadSchedule();
 </script>
 </body>
 </html>
