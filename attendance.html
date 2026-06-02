@@ -5,12 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hockey Attendance Dashboard</title>
   <style>
-    :root{--blue:#123c69;--blue2:#1f5f99;--green:#15803d;--green-bg:#dcfce7;--red:#b91c1c;--red-bg:#fee2e2;--purple:#6d28d9;--purple-bg:#ede9fe;--border:#d1d5db;--dark:#1f2937}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:18px 12px;text-align:center}header h1{margin:0;font-size:24px}.container{max-width:1180px;margin:12px auto;padding:0 10px 28px}.panel{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}.controls{display:grid;grid-template-columns:1fr;gap:10px}label{display:block;font-size:12px;font-weight:bold;color:#4b5563;margin-bottom:5px}select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}.mode-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.mode-btn,.main-btn{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:bold;cursor:pointer;background:white;color:var(--blue);font-size:13px;text-decoration:none;display:inline-block}.mode-btn.active,.main-btn.primary{background:var(--blue);color:white;border-color:var(--blue)}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.team-summary{border-radius:14px;padding:12px;border:1px solid var(--border);background:white}.team-summary-title{font-weight:bold;color:var(--blue);font-size:17px;margin-bottom:8px}.team-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.mini-stat{border-radius:12px;padding:10px;text-align:center;border:1px solid var(--border)}.mini-stat .number{font-size:25px;font-weight:bold;margin-bottom:3px}.mini-stat .label{font-size:12px;font-weight:bold;color:#4b5563}.present{background:var(--green-bg);color:var(--green)}.absent{background:var(--red-bg);color:var(--red)}.mc{background:var(--purple-bg);color:var(--purple)}.student-panel{background:white;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.04)}.student-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;color:white;background:var(--blue);font-weight:bold;font-size:18px}.student-total{background:white;color:var(--blue);border-radius:999px;padding:5px 10px;font-size:13px}.student-list{padding:10px;max-height:760px;overflow-y:auto}.student-card{border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;margin-bottom:6px;background:white;display:grid;grid-template-columns:1fr;gap:5px}.student-top{display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}.name{font-size:14px;font-weight:bold;color:var(--blue);white-space:nowrap;overflow-x:auto;overflow-y:hidden;text-overflow:clip;max-width:100%;scrollbar-width:thin}.meta{margin-top:0;color:#6b7280;font-size:11px;white-space:nowrap;display:inline;margin-left:6px}.status-pill{border-radius:999px;padding:5px 8px;font-size:12px;font-weight:bold;background:#f3f4f6;color:#374151;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:92px;height:26px;flex-shrink:0}.attendance-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:center}.att-btn{border:none;border-radius:8px;padding:6px 4px;font-size:12px;font-weight:bold;cursor:pointer;width:100%;height:30px}.att-btn.mc{font-size:10px;line-height:1.05}.att-btn.present{background:var(--green-bg);color:var(--green)}.att-btn.absent{background:var(--red-bg);color:var(--red)}.att-btn.mc{background:var(--purple-bg);color:var(--purple)}.reason-input{padding:6px;border:1px solid var(--border);border-radius:7px;font-size:11px;width:100%;min-width:0}.loading,.empty,.error{background:white;border:1px dashed var(--border);border-radius:14px;padding:18px;text-align:center;color:#6b7280}.error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}.footer-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.list-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.list-box{background:white;border:1px solid var(--border);border-radius:14px;padding:12px}.list-box h3{margin:0 0 8px;color:var(--blue);font-size:16px}.name-list{font-size:13px;line-height:1.5;max-height:260px;overflow-y:auto}.name-list div{padding:3px 0;border-bottom:1px solid #f1f5f9}.name-list div:last-child{border-bottom:none}@media(max-width:760px){header h1{font-size:21px}.container{margin:8px auto}.summary-grid{grid-template-columns:1fr}.attendance-row{grid-template-columns:repeat(4,1fr)}.list-summary{grid-template-columns:1fr}.mode-btn,.main-btn{font-size:12px;padding:8px 10px}.student-card{padding:8px}.att-btn{font-size:12px;padding:7px 3px}.att-btn.mc{font-size:9px}}
+    :root{--blue:#123c69;--blue2:#1f5f99;--green:#15803d;--green-bg:#dcfce7;--red:#b91c1c;--red-bg:#fee2e2;--purple:#6d28d9;--purple-bg:#ede9fe;--border:#d1d5db;--dark:#1f2937}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}
+    header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:18px 12px;text-align:center}
+    header h1{margin:0;font-size:24px}
+    .container{max-width:1180px;margin:12px auto;padding:0 10px 28px}
+    .panel{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+
+    .announcement-panel{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+    .announcement-title{font-size:18px;font-weight:bold;color:var(--blue);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .announcement-container{height:145px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;padding:8px}
+    .announcement-item{background:white;border-left:4px solid var(--blue);border-radius:8px;padding:10px;margin-bottom:8px}
+    .announcement-date{font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:bold}
+    .announcement-text{font-size:14px;line-height:1.5}
+    .delete-announcement{margin-top:8px;border:none;border-radius:999px;background:var(--red-bg);color:var(--red);font-weight:bold;padding:6px 10px;cursor:pointer;font-size:12px;display:none}
+    body.admin-mode .delete-announcement{display:inline-block}
+
+    .controls{display:grid;grid-template-columns:1fr;gap:10px}
+    label{display:block;font-size:12px;font-weight:bold;color:#4b5563;margin-bottom:5px}
+    select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}
+    .mode-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .mode-btn,.main-btn{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:bold;cursor:pointer;background:white;color:var(--blue);font-size:13px;text-decoration:none;display:inline-block}
+    .mode-btn.active,.main-btn.primary{background:var(--blue);color:white;border-color:var(--blue)}
+    .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .team-summary{border-radius:14px;padding:12px;border:1px solid var(--border);background:white}
+    .team-summary-title{font-weight:bold;color:var(--blue);font-size:17px;margin-bottom:8px}
+    .team-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .mini-stat{border-radius:12px;padding:10px;text-align:center;border:1px solid var(--border)}
+    .mini-stat .number{font-size:25px;font-weight:bold;margin-bottom:3px}
+    .mini-stat .label{font-size:12px;font-weight:bold;color:#4b5563}
+    .present{background:var(--green-bg);color:var(--green)}
+    .absent{background:var(--red-bg);color:var(--red)}
+    .mc{background:var(--purple-bg);color:var(--purple)}
+    .student-panel{background:white;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+    .student-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;color:white;background:var(--blue);font-weight:bold;font-size:18px}
+    .student-total{background:white;color:var(--blue);border-radius:999px;padding:5px 10px;font-size:13px}
+    .student-list{padding:10px;max-height:760px;overflow-y:auto}
+    .student-card{border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;margin-bottom:6px;background:white;display:grid;grid-template-columns:1fr;gap:5px}
+    .student-top{display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}
+    .name{font-size:14px;font-weight:bold;color:var(--blue);white-space:nowrap;overflow-x:auto;overflow-y:hidden;text-overflow:clip;max-width:100%;scrollbar-width:thin}
+    .meta{margin-top:0;color:#6b7280;font-size:11px;white-space:nowrap;display:inline;margin-left:6px}
+    .status-pill{border-radius:999px;padding:5px 8px;font-size:12px;font-weight:bold;background:#f3f4f6;color:#374151;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:92px;height:26px;flex-shrink:0}
+    .attendance-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:center}
+    .att-btn{border:none;border-radius:8px;padding:6px 4px;font-size:12px;font-weight:bold;cursor:pointer;width:100%;height:30px}
+    .att-btn.mc{font-size:10px;line-height:1.05}
+    .att-btn.present{background:var(--green-bg);color:var(--green)}
+    .att-btn.absent{background:var(--red-bg);color:var(--red)}
+    .att-btn.mc{background:var(--purple-bg);color:var(--purple)}
+    .reason-input{padding:6px;border:1px solid var(--border);border-radius:7px;font-size:11px;width:100%;min-width:0}
+    .loading,.empty,.error{background:white;border:1px dashed var(--border);border-radius:14px;padding:18px;text-align:center;color:#6b7280}
+    .error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}
+    .footer-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .list-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .list-box{background:white;border:1px solid var(--border);border-radius:14px;padding:12px}
+    .list-box h3{margin:0 0 8px;color:var(--blue);font-size:16px}
+    .name-list{font-size:13px;line-height:1.5;max-height:260px;overflow-y:auto}
+    .name-list div{padding:3px 0;border-bottom:1px solid #f1f5f9}
+    .name-list div:last-child{border-bottom:none}
+    @media(max-width:760px){
+      header h1{font-size:21px}.container{margin:8px auto}.summary-grid{grid-template-columns:1fr}.attendance-row{grid-template-columns:repeat(4,1fr)}.list-summary{grid-template-columns:1fr}.mode-btn,.main-btn{font-size:12px;padding:8px 10px}.student-card{padding:8px}.att-btn{font-size:12px;padding:7px 3px}.att-btn.mc{font-size:9px}.announcement-container{height:150px}
+    }
   </style>
 </head>
+
 <body>
 <header><h1>Hockey Attendance Dashboard</h1></header>
+
 <main class="container">
+
+  <section class="announcement-panel">
+    <div class="announcement-title">
+      <span>📢 Announcements Board</span>
+      <button class="main-btn" onclick="toggleAdminMode()">Admin</button>
+    </div>
+    <div id="announcementContainer" class="announcement-container">
+      <div class="loading">Loading announcements...</div>
+    </div>
+  </section>
+
   <section class="panel">
     <div class="controls">
       <div><label for="sessionSelect">Session from Schedule</label><select id="sessionSelect"><option>Loading sessions...</option></select></div>
@@ -70,7 +143,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, collection, doc, setDoc, onSnapshot, serverTimestamp, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTKW9nlCQK-1ktvEu8at4-KRLjIwbz660",
@@ -84,6 +157,7 @@
   const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
   const STUDENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=1879195237";
   const MC_PARENT_LETTER_UPLOAD_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSeWelhY6SsCrPo2g-GGByH33dAS0hx26AygKzQrtOgqWbay3A/viewform?usp=header";
+  const ADMIN_PIN = "0804";
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
@@ -92,11 +166,74 @@
   let sessions = [];
   let attendance = {};
   let unsubscribeAttendance = null;
+  let adminMode = false;
 
   function csvToRows(text){const rows=[];let row=[],cell="",insideQuotes=false;for(let i=0;i<text.length;i++){const char=text[i],next=text[i+1];if(char==='"'&&insideQuotes&&next==='"'){cell+='"';i++}else if(char==='"'){insideQuotes=!insideQuotes}else if(char===','&&!insideQuotes){row.push(cell.trim());cell=""}else if((char==='\n'||char==='\r')&&!insideQuotes){if(cell||row.length){row.push(cell.trim());rows.push(row);row=[];cell=""}if(char==='\r'&&next==='\n')i++}else{cell+=char}}if(cell||row.length){row.push(cell.trim());rows.push(row)}return rows}
   function normaliseHeader(header){return String(header||"").toLowerCase().replace(/\s+/g,"")}
   function escapeHtml(text){return String(text??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
   function safeId(text){return String(text??"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}
+
+  function requireAdminPin(){
+    const pin=prompt("Enter Admin PIN:");
+    return pin===ADMIN_PIN;
+  }
+
+  function toggleAdminMode(){
+    if(!adminMode){
+      if(!requireAdminPin()){
+        alert("Incorrect PIN.");
+        return;
+      }
+      adminMode=true;
+      document.body.classList.add("admin-mode");
+    }else{
+      adminMode=false;
+      document.body.classList.remove("admin-mode");
+    }
+  }
+
+  function listenAnnouncements(){
+    const q=query(collection(db,"announcements"),orderBy("createdAt","desc"));
+
+    onSnapshot(q,snap=>{
+      const box=document.getElementById("announcementContainer");
+
+      if(snap.empty){
+        box.innerHTML=`
+          <div class="announcement-item">
+            <div class="announcement-date">No announcements yet</div>
+            <div class="announcement-text">Announcements will appear here.</div>
+          </div>
+        `;
+        return;
+      }
+
+      box.innerHTML=snap.docs.map(d=>{
+        const a=d.data();
+        return `
+          <div class="announcement-item">
+            <div class="announcement-date">${escapeHtml(a.date || "Announcement")}</div>
+            <div class="announcement-text">${escapeHtml(a.text || "")}</div>
+            <button class="delete-announcement" onclick="deleteAnnouncement('${d.id}')">Delete</button>
+          </div>
+        `;
+      }).join("");
+    },err=>{
+      console.error(err);
+      document.getElementById("announcementContainer").innerHTML='<div class="error">Unable to load announcements.</div>';
+    });
+  }
+
+  async function deleteAnnouncement(id){
+    if(!requireAdminPin()){
+      alert("Incorrect PIN.");
+      return;
+    }
+
+    if(confirm("Delete this announcement?")){
+      await deleteDoc(doc(db,"announcements",id));
+    }
+  }
 
   function scheduleDateObject(dateText){
     if(!dateText)return null;
@@ -203,19 +340,15 @@
     const absence=students.filter(s=>["Absent","MC/Parent Letter"].includes(attendance[s.id]?.status||""));
     const unmarked=students.filter(s=>!["Present","Absent","MC/Parent Letter"].includes(attendance[s.id]?.status||""));
 
-    const presentBox=document.getElementById("presentList");
-    const absenceBox=document.getElementById("absenceList");
-    const unmarkedBox=document.getElementById("unmarkedList");
-
-    presentBox.innerHTML=present.length
+    document.getElementById("presentList").innerHTML=present.length
       ?present.map(s=>`<div>${escapeHtml(s.name)} <strong>(${escapeHtml(s.className)}, ${escapeHtml(s.group)})</strong></div>`).join("")
       :"No one marked present yet.";
 
-    absenceBox.innerHTML=absence.length
+    document.getElementById("absenceList").innerHTML=absence.length
       ?absence.map(s=>{const r=attendance[s.id]||{};return `<div>${escapeHtml(s.name)} <strong>(${escapeHtml(r.status||"")})</strong>${r.reason?" — "+escapeHtml(r.reason):""}</div>`}).join("")
       :"No one marked absent or MC/PL yet.";
 
-    unmarkedBox.innerHTML=unmarked.length
+    document.getElementById("unmarkedList").innerHTML=unmarked.length
       ?unmarked.map(s=>`<div>${escapeHtml(s.name)} <strong>(${escapeHtml(s.className)}, ${escapeHtml(s.group)})</strong></div>`).join("")
       :"All students have been marked.";
   }
@@ -223,36 +356,12 @@
   async function saveTeacherRecord(session, student, status, reason){
     const recordId=`${session.id}_${student.id}`;
     const payload={
-      sessionId:session.id,
-      sessionLabel:session.label,
-      date:session.date||"",
-      day:session.day||"",
-      start:session.start||"",
-      end:session.end||"",
-      venue:session.venue||"",
-      remarks:session.remarks||"",
-      studentId:student.id,
-      name:student.name,
-      className:student.className,
-      group:student.group,
-      gender:student.gender,
-      status,
-      reason,
-      updatedAt:new Date().toISOString(),
-      timestamp:serverTimestamp()
+      sessionId:session.id,sessionLabel:session.label,date:session.date||"",day:session.day||"",start:session.start||"",end:session.end||"",venue:session.venue||"",remarks:session.remarks||"",
+      studentId:student.id,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()
     };
     await setDoc(doc(db,"teacherAttendanceRecords",recordId),payload,{merge:true});
     await setDoc(doc(db,"attendanceSessions",session.id),{
-      sessionId:session.id,
-      sessionLabel:session.label,
-      date:session.date||"",
-      day:session.day||"",
-      start:session.start||"",
-      end:session.end||"",
-      venue:session.venue||"",
-      remarks:session.remarks||"",
-      updatedAt:new Date().toISOString(),
-      timestamp:serverTimestamp()
+      sessionId:session.id,sessionLabel:session.label,date:session.date||"",day:session.day||"",start:session.start||"",end:session.end||"",venue:session.venue||"",remarks:session.remarks||"",updatedAt:new Date().toISOString(),timestamp:serverTimestamp()
     },{merge:true});
   }
 
@@ -286,19 +395,38 @@
     const rows=[["Session","Name","Class","Group","Status","Reason","Updated At"]];
     students.forEach(student=>{const record=attendance[student.id]||{};rows.push([session?.label||"",student.name,student.className,student.group,record.status||"Unmarked",record.reason||"",record.updatedAt||""]);});
     const csv=rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
-    const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`attendance_${session?.id||"session"}.csv`;a.click();URL.revokeObjectURL(url);
+    const blob=new Blob([csv],{type:"text/csv"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=`attendance_${session?.id||"session"}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async function loadAll(){
     document.getElementById("studentContainer").innerHTML='<div class="loading">Loading students...</div>';
-    try{await loadSchedule();await loadStudents();startAttendanceListener();renderStudents();}catch(err){console.error(err);document.getElementById("studentContainer").innerHTML='<div class="error">Unable to refresh attendance data. Check Google Sheet sharing/publishing.</div>';}
+    try{
+      await loadSchedule();
+      await loadStudents();
+      startAttendanceListener();
+      renderStudents();
+    }catch(err){
+      console.error(err);
+      document.getElementById("studentContainer").innerHTML='<div class="error">Unable to refresh attendance data. Check Google Sheet sharing/publishing.</div>';
+    }
   }
 
   window.markAttendance=markAttendance;
   window.saveReason=saveReason;
   window.loadAll=loadAll;
   window.downloadCsv=downloadCsv;
+  window.toggleAdminMode=toggleAdminMode;
+  window.deleteAnnouncement=deleteAnnouncement;
+
   document.getElementById("sessionSelect").addEventListener("change",()=>{startAttendanceListener();setTimeout(updateSummary,300);});
+
+  listenAnnouncements();
   loadAll();
 </script>
 </body>
