@@ -5,12 +5,127 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hockey Team Schedule</title>
   <style>
-    :root{--blue:#123c69;--blue2:#1f5f99;--light:#e8f1fb;--gold:#f6c453;--dark:#1f2937;--border:#d1d5db}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:28px 16px;text-align:center}header h1{margin:0;font-size:30px}.container{max-width:1100px;margin:20px auto;padding:0 14px 36px}.toolbar{background:white;border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.05);margin-bottom:18px}label{font-size:12px;font-weight:bold;color:#4b5563;display:block;margin-bottom:5px}input{width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}.quick-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.btn{border:none;border-radius:999px;padding:9px 13px;background:var(--blue);color:white;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:13px}.btn.secondary{background:white;color:var(--blue);border:1px solid var(--border)}.term-title{margin:26px 0 10px;font-size:25px;color:var(--blue)}.schedule-grid{display:flex;flex-direction:column;gap:14px;max-height:900px;overflow-y:auto;padding-right:6px}.schedule-grid::-webkit-scrollbar{width:8px}.schedule-grid::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}.schedule-grid::-webkit-scrollbar-track{background:#eef2f7;border-radius:999px}.card{background:white;border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.05);width:100%}.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}.date{font-size:21px;font-weight:bold;color:var(--blue)}.day{background:var(--light);color:var(--blue);padding:6px 10px;border-radius:999px;font-size:13px;font-weight:bold}.info{display:grid;grid-template-columns:86px 1fr;gap:7px;margin:8px 0;font-size:14px}.info span:first-child{color:#6b7280;font-weight:bold}.tag{display:inline-block;background:#fff7df;color:#7a5200;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:bold;margin-top:4px}.card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;border-top:1px solid #eee;padding-top:12px}.small-btn{border-radius:10px;border:1px solid var(--border);padding:8px 10px;background:white;color:var(--blue);font-weight:bold;cursor:pointer;text-decoration:none;font-size:13px}.empty,.loading,.error{background:white;border:1px dashed var(--border);border-radius:16px;padding:20px;text-align:center;color:#6b7280}.error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}@media(max-width:760px){header h1{font-size:25px}.term-title{font-size:22px}}
+    :root{--blue:#123c69;--blue2:#1f5f99;--light:#e8f1fb;--gold:#f6c453;--dark:#1f2937;--border:#d1d5db}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}
+    header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:28px 16px;text-align:center}
+    header h1{margin:0;font-size:30px}
+    .container{max-width:1100px;margin:20px auto;padding:0 14px 36px}
+
+    .announcement-box{
+      background:#f8fbff;
+      border:1px solid var(--border);
+      border-left:6px solid #3b82f6;
+      border-radius:14px;
+      padding:12px 14px;
+      margin-bottom:18px;
+      box-shadow:0 6px 18px rgba(0,0,0,.05);
+    }
+    .announcement-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:8px;
+      color:var(--blue);
+      font-weight:bold;
+      font-size:16px;
+    }
+    .announcement-list{
+      max-height:120px;
+      overflow-y:auto;
+      padding-right:6px;
+    }
+    .announcement-list::-webkit-scrollbar{width:8px}
+    .announcement-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+    .announcement-item{
+      background:white;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      padding:10px;
+      margin-bottom:8px;
+      font-size:14px;
+      line-height:1.45;
+    }
+    .announcement-date{
+      font-size:12px;
+      color:#6b7280;
+      font-weight:bold;
+      margin-bottom:4px;
+    }
+    .delete-announcement{
+      margin-top:8px;
+      border:none;
+      background:#fee2e2;
+      color:#b91c1c;
+      border-radius:999px;
+      padding:5px 9px;
+      font-size:12px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .toolbar{background:white;border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.05);margin-bottom:18px}
+    label{font-size:12px;font-weight:bold;color:#4b5563;display:block;margin-bottom:5px}
+    input,textarea{width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}
+    textarea{min-height:80px;resize:vertical}
+    .quick-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+    .btn{border:none;border-radius:999px;padding:9px 13px;background:var(--blue);color:white;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:13px}
+    .btn.secondary{background:white;color:var(--blue);border:1px solid var(--border)}
+    .term-title{margin:26px 0 10px;font-size:25px;color:var(--blue)}
+    .schedule-grid{display:flex;flex-direction:column;gap:14px;max-height:900px;overflow-y:auto;padding-right:6px}
+    .schedule-grid::-webkit-scrollbar{width:8px}
+    .schedule-grid::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+    .schedule-grid::-webkit-scrollbar-track{background:#eef2f7;border-radius:999px}
+    .card{background:white;border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.05);width:100%}
+    .card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}
+    .date{font-size:21px;font-weight:bold;color:var(--blue)}
+    .day{background:var(--light);color:var(--blue);padding:6px 10px;border-radius:999px;font-size:13px;font-weight:bold}
+    .info{display:grid;grid-template-columns:86px 1fr;gap:7px;margin:8px 0;font-size:14px}
+    .info span:first-child{color:#6b7280;font-weight:bold}
+    .tag{display:inline-block;background:#fff7df;color:#7a5200;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:bold;margin-top:4px}
+    .card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;border-top:1px solid #eee;padding-top:12px}
+    .small-btn{border-radius:10px;border:1px solid var(--border);padding:8px 10px;background:white;color:var(--blue);font-weight:bold;cursor:pointer;text-decoration:none;font-size:13px}
+    .empty,.loading,.error{background:white;border:1px dashed var(--border);border-radius:16px;padding:20px;text-align:center;color:#6b7280}
+    .error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}
+
+    .announcement-entry{
+      background:white;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      box-shadow:0 6px 18px rgba(0,0,0,.05);
+      margin-top:22px;
+    }
+    .announcement-entry h2{
+      margin:0 0 12px;
+      font-size:20px;
+      color:var(--blue);
+    }
+    .form-row{margin-bottom:10px}
+
+    @media(max-width:760px){
+      header h1{font-size:25px}
+      .term-title{font-size:22px}
+      .announcement-list{max-height:130px}
+    }
   </style>
 </head>
 <body>
 <header><h1>Hockey Team Schedule 2026</h1></header>
+
 <main class="container">
+
+  <section class="announcement-box">
+    <div class="announcement-head">
+      <span>📢 Announcement</span>
+      <button class="btn secondary" onclick="loadAnnouncements()">🔄</button>
+    </div>
+    <div id="announcementList" class="announcement-list">
+      <div class="loading">Loading announcements...</div>
+    </div>
+  </section>
+
   <section class="toolbar">
     <label for="searchInput">Search</label>
     <input id="searchInput" type="text" placeholder="Search date, venue, remarks..." />
@@ -23,10 +138,44 @@
   </div>
 
   <section id="scheduleContainer"><div class="loading">Loading schedule...</div></section>
+
+  <section class="announcement-entry">
+    <h2>➕ Add Announcement</h2>
+
+    <div class="form-row">
+      <label for="announcementDate">Date / Label</label>
+      <input id="announcementDate" type="text" placeholder="e.g. 3 Jun 2026 or Reminder" />
+    </div>
+
+    <div class="form-row">
+      <label for="announcementText">Announcement</label>
+      <textarea id="announcementText" placeholder="Type announcement here..."></textarea>
+    </div>
+
+    <button class="btn" onclick="addAnnouncement()">Add Announcement</button>
+    <button class="btn secondary" onclick="clearAnnouncementForm()">Clear</button>
+  </section>
+
 </main>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBTKW9nlCQK-1ktvEu8at4-KRLjIwbz660",
+  authDomain: "saintshockeyattendance.firebaseapp.com",
+  projectId: "saintshockeyattendance",
+  storageBucket: "saintshockeyattendance.firebasestorage.app",
+  messagingSenderId: "717790587080",
+  appId: "1:717790587080:web:cd9e1a07d580566f3f1dfd"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
+const ADMIN_PIN = "0804";
 let schedule = [];
 
 const fallbackMapLinks = {
@@ -38,6 +187,15 @@ const fallbackMapLinks = {
 function escapeHtml(text){return String(text ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function safeId(text){return String(text ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}
 function normaliseHeader(header){return String(header||"").toLowerCase().replace(/\s+/g,"")}
+
+function checkPin(){
+  const pin = prompt("Enter Admin PIN:");
+  if(pin !== ADMIN_PIN){
+    alert("Incorrect PIN.");
+    return false;
+  }
+  return true;
+}
 
 function csvToRows(text){
   const rows=[];let row=[],cell="",insideQuotes=false;
@@ -95,6 +253,7 @@ function rowsToScheduleObjects(rows){
 }
 
 function makeMapLink(item){return item.mapLink || fallbackMapLinks[item.venue] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.venue||"")}`}
+
 function makeCalendarLink(item){
   const d=scheduleDateObject(item.date);
   const date=d?`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`:"20260101";
@@ -143,8 +302,81 @@ function renderSchedule(){
   `).join("");
 }
 
+function loadAnnouncements(){
+  const announcementList = document.getElementById("announcementList");
+  announcementList.innerHTML = '<div class="loading">Loading announcements...</div>';
+
+  const q = query(collection(db,"announcements"), orderBy("createdAt","desc"));
+
+  onSnapshot(q, snapshot => {
+    if(snapshot.empty){
+      announcementList.innerHTML = `
+        <div class="announcement-item">
+          <div class="announcement-date">No announcement</div>
+          <div>No announcements have been added yet.</div>
+        </div>
+      `;
+      return;
+    }
+
+    announcementList.innerHTML = snapshot.docs.map(docSnap => {
+      const item = docSnap.data();
+      return `
+        <div class="announcement-item">
+          <div class="announcement-date">${escapeHtml(item.date || "Announcement")}</div>
+          <div>${escapeHtml(item.text || "")}</div>
+          <button class="delete-announcement" onclick="deleteAnnouncement('${docSnap.id}')">Delete</button>
+        </div>
+      `;
+    }).join("");
+  }, err => {
+    console.error(err);
+    announcementList.innerHTML = '<div class="error">Unable to load announcements.</div>';
+  });
+}
+
+async function addAnnouncement(){
+  if(!checkPin()) return;
+
+  const date = document.getElementById("announcementDate").value.trim();
+  const text = document.getElementById("announcementText").value.trim();
+
+  if(!text){
+    alert("Please type an announcement.");
+    return;
+  }
+
+  await addDoc(collection(db,"announcements"),{
+    date: date || "Announcement",
+    text,
+    createdAt: serverTimestamp()
+  });
+
+  clearAnnouncementForm();
+}
+
+async function deleteAnnouncement(id){
+  if(!checkPin()) return;
+
+  if(confirm("Delete this announcement?")){
+    await deleteDoc(doc(db,"announcements",id));
+  }
+}
+
+function clearAnnouncementForm(){
+  document.getElementById("announcementDate").value = "";
+  document.getElementById("announcementText").value = "";
+}
+
 document.getElementById("searchInput").addEventListener("input",renderSchedule);
+
 window.loadSchedule=loadSchedule;
+window.loadAnnouncements=loadAnnouncements;
+window.addAnnouncement=addAnnouncement;
+window.deleteAnnouncement=deleteAnnouncement;
+window.clearAnnouncementForm=clearAnnouncementForm;
+
+loadAnnouncements();
 loadSchedule();
 </script>
 </body>
