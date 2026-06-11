@@ -4,9 +4,140 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Saints Hockey Attendance</title>
-  <style>
-    :root{--blue:#123c69;--blue2:#1f5f99;--green:#15803d;--green-bg:#dcfce7;--red:#b91c1c;--red-bg:#fee2e2;--purple:#6d28d9;--purple-bg:#ede9fe;--border:#d1d5db;--dark:#1f2937}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f9fc;color:var(--dark)}header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:18px 12px;text-align:center}header h1{margin:0;font-size:24px}.container{max-width:1180px;margin:12px auto;padding:0 10px 28px}.panel{background:white;border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.04)}.controls{display:grid;grid-template-columns:1fr;gap:10px}label{display:block;font-size:12px;font-weight:bold;color:#4b5563;margin-bottom:5px}select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:white}.mode-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.mode-btn,.main-btn{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:bold;cursor:pointer;background:white;color:var(--blue);font-size:13px;text-decoration:none;display:inline-block}.mode-btn.active,.main-btn.primary{background:var(--blue);color:white;border-color:var(--blue)}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.team-summary{border-radius:14px;padding:12px;border:1px solid var(--border);background:white}.team-summary-title{font-weight:bold;color:var(--blue);font-size:17px;margin-bottom:8px}.team-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.mini-stat{border-radius:12px;padding:10px;text-align:center;border:1px solid var(--border)}.mini-stat .number{font-size:25px;font-weight:bold;margin-bottom:3px}.mini-stat .label{font-size:12px;font-weight:bold;color:#4b5563}.present{background:var(--green-bg);color:var(--green)}.absent{background:var(--red-bg);color:var(--red)}.mc{background:var(--purple-bg);color:var(--purple)}.student-panel{background:white;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.04)}.student-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;color:white;background:var(--blue);font-weight:bold;font-size:18px}.student-total{background:white;color:var(--blue);border-radius:999px;padding:5px 10px;font-size:13px}.student-list{padding:10px;max-height:760px;overflow-y:auto}.student-card{border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;margin-bottom:6px;background:white;display:grid;grid-template-columns:1fr;gap:5px}.student-top{display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}.name{font-size:14px;font-weight:bold;color:var(--blue);white-space:nowrap;overflow-x:auto;overflow-y:hidden;text-overflow:clip;max-width:100%;scrollbar-width:thin}.meta{margin-top:0;color:#6b7280;font-size:11px;white-space:nowrap;display:inline;margin-left:6px}.status-pill{border-radius:999px;padding:5px 8px;font-size:12px;font-weight:bold;background:#f3f4f6;color:#374151;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:92px;height:26px;flex-shrink:0}.attendance-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:center}.att-btn{border:none;border-radius:8px;padding:6px 4px;font-size:12px;font-weight:bold;cursor:pointer;width:100%;height:30px}.att-btn.mc{font-size:10px;line-height:1.05}.att-btn.present{background:var(--green-bg);color:var(--green)}.att-btn.absent{background:var(--red-bg);color:var(--red)}.att-btn.mc{background:var(--purple-bg);color:var(--purple)}.reason-input{padding:6px;border:1px solid var(--border);border-radius:7px;font-size:11px;width:100%;min-width:0}.loading,.empty,.error{background:white;border:1px dashed var(--border);border-radius:14px;padding:18px;text-align:center;color:#6b7280}.error{border-color:#fca5a5;color:#991b1b;background:#fff5f5}.footer-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.list-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.list-box{background:white;border:1px solid var(--border);border-radius:14px;padding:12px}.list-box h3{margin:0 0 8px;color:var(--blue);font-size:16px}.name-list{font-size:13px;line-height:1.5;max-height:260px;overflow-y:auto}.name-list div{padding:3px 0;border-bottom:1px solid #f1f5f9}.name-list div:last-child{border-bottom:none}@media(max-width:760px){header h1{font-size:21px}.container{margin:8px auto}.summary-grid{grid-template-columns:1fr}.attendance-row{grid-template-columns:repeat(4,1fr)}.list-summary{grid-template-columns:1fr}.mode-btn,.main-btn{font-size:12px;padding:8px 10px}.student-card{padding:8px}.att-btn{font-size:12px;padding:7px 3px}.att-btn.mc{font-size:9px}}
-  </style>
+  
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+:root{
+  --bg:#07121f;--panel:#0d1828;--panel2:#101d30;--line:#263850;
+  --muted:#94a9c3;--text:#eef6ff;--accent:#2dd4bf;--accent2:#38bdf8;
+  --green:#22c55e;--green-bg:rgba(34,197,94,.13);
+  --red:#fb7185;--red-bg:rgba(251,113,133,.13);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,.13);
+  --shadow:0 18px 45px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Outfit',Arial,Helvetica,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 82% 15%, rgba(45,212,191,.16), transparent 34%),
+    linear-gradient(180deg,var(--bg),#06101d 62%,#050b14);
+  min-height:100vh;
+}
+body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(6,16,29,.1),rgba(6,16,29,.78));pointer-events:none}
+header{
+  width:min(980px,calc(100% - 28px));
+  margin:22px auto 10px;
+  position:relative;
+  z-index:1;
+}
+header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.container{
+  width:min(980px,calc(100% - 28px));
+  margin:0 auto;
+  padding:0 0 40px;
+  position:relative;
+  z-index:1;
+}
+.panel,.student-panel,.team-summary,.list-box,.loading,.empty,.error{
+  background:rgba(13,24,40,.86);
+  border:1px solid rgba(148,169,195,.20);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(14px);
+}
+.panel{padding:10px;margin-bottom:10px}
+.controls{display:grid;grid-template-columns:1fr;gap:8px}
+label{
+  display:block;font-size:10px;font-weight:800;color:var(--muted);margin-bottom:4px;
+  text-transform:uppercase;letter-spacing:.08em;
+}
+select,.reason-input{
+  width:100%;padding:9px 10px;border:1px solid rgba(148,169,195,.24);border-radius:12px;
+  font-size:12px;background:#07101d;color:var(--text);outline:none;
+}
+select:focus,.reason-input:focus{border-color:rgba(45,212,191,.65);box-shadow:0 0 0 3px rgba(45,212,191,.10)}
+.mode-row,.footer-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.mode-btn,.main-btn{
+  border:1px solid rgba(125,178,255,.24);border-radius:9px;padding:6px 10px;font-weight:800;
+  cursor:pointer;background:linear-gradient(180deg,rgba(20,39,63,.96),rgba(10,20,35,.96));color:#eaf4ff;font-size:11px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  min-height:28px;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 6px 16px rgba(0,0,0,.18);transition:transform .14s ease,border-color .14s ease,background .14s ease,box-shadow .14s ease;
+}
+.mode-btn:hover,.main-btn:hover{border-color:rgba(96,165,250,.62);background:linear-gradient(180deg,rgba(21,50,82,.98),rgba(10,24,43,.98));transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 9px 22px rgba(0,0,0,.24)}
+.mode-btn:active,.main-btn:active{transform:translateY(0)}
+.mode-btn.active,.main-btn.primary{background:linear-gradient(180deg,#0b67d8,#0754b6);color:#fff;border-color:rgba(96,165,250,.65)}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.team-summary{padding:10px;background:rgba(13,24,40,.72);box-shadow:none}
+.team-summary-title{font-weight:800;color:#fff;font-size:13px;margin-bottom:8px}
+.team-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mini-stat{
+  border-radius:12px;padding:8px 6px;text-align:center;border:1px solid rgba(148,169,195,.18);
+  background:#0b1524;color:#dbeafe;
+}
+.mini-stat .number{font-size:18px;font-weight:800;margin-bottom:2px;line-height:1}
+.mini-stat .label{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.present{background:var(--green-bg)!important;color:#86efac!important}
+.absent{background:var(--red-bg)!important;color:#fecdd3!important}
+.mc{background:var(--purple-bg)!important;color:#ddd6fe!important}
+.student-panel{overflow:hidden;margin-top:10px}
+.student-header{
+  display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
+  color:#fff;background:rgba(16,29,48,.9);font-weight:800;font-size:14px;border-bottom:1px solid rgba(148,169,195,.14)
+}
+.student-total{
+  background:rgba(45,212,191,.13);color:#99f6e4;border:1px solid rgba(45,212,191,.25);
+  border-radius:999px;padding:4px 8px;font-size:11px;
+}
+.student-list{
+  padding:8px;max-height:640px;overflow-y:auto;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+}
+.student-card{
+  border:1px solid rgba(148,169,195,.16);border-radius:12px;padding:7px 8px;margin:0;
+  background:rgba(16,29,48,.72);display:grid;grid-template-columns:1fr;gap:6px;min-width:0;
+}
+.student-top{display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}
+.name{
+  font-size:12px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.meta{margin-left:5px;color:var(--muted);font-size:10px;white-space:nowrap;font-weight:600}
+.status-pill{
+  border-radius:999px;padding:4px 7px;font-size:10px;font-weight:800;background:#172236;color:#cbd5e1;
+  white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:22px;flex-shrink:0;
+}
+.attendance-row{display:grid;grid-template-columns:42px 42px 50px 1fr;gap:5px;align-items:center}
+.att-btn{
+  border:1px solid rgba(148,169,195,.18);border-radius:8px;padding:4px 6px;font-size:10px;font-weight:800;
+  cursor:pointer;width:100%;height:26px;background:#0b1524;letter-spacing:.01em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);transition:transform .12s ease,border-color .12s ease,filter .12s ease;
+}
+.att-btn:hover{transform:translateY(-1px);filter:brightness(1.12)}
+.att-btn:active{transform:translateY(0)}
+.att-btn.present{border-color:rgba(34,197,94,.42)!important;background:linear-gradient(180deg,rgba(22,101,52,.38),rgba(5,46,22,.24))!important;color:#86efac!important}
+.att-btn.absent{border-color:rgba(248,113,113,.42)!important;background:linear-gradient(180deg,rgba(127,29,29,.42),rgba(69,10,10,.24))!important;color:#fecaca!important}
+.att-btn.mc{border-color:rgba(167,139,250,.42)!important;background:linear-gradient(180deg,rgba(88,28,135,.38),rgba(46,16,101,.24))!important;color:#ddd6fe!important;font-size:9px;line-height:1.05}
+.loading,.empty,.error{padding:18px;text-align:center;color:var(--muted);grid-column:1/-1}
+.error{border-color:rgba(251,113,133,.45);color:#fecdd3;background:rgba(127,29,29,.25)}
+.list-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.list-box{padding:10px;background:rgba(13,24,40,.72)}
+.list-box h3{margin:0 0 8px;color:#fff;font-size:13px}
+.name-list{font-size:12px;line-height:1.4;max-height:170px;overflow-y:auto;color:#dbeafe}
+.name-list div{padding:3px 0;border-bottom:1px solid rgba(148,169,195,.10)}
+.name-list div:last-child{border-bottom:none}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#29415c;border-radius:999px}
+::-webkit-scrollbar-track{background:transparent}
+@media(max-width:760px){
+  header,.container{width:min(100% - 18px,980px)}
+  header{margin-top:14px}
+  header h1{font-size:18px}
+  .summary-grid,.list-summary,.student-list{grid-template-columns:1fr}
+  .team-summary-row{grid-template-columns:repeat(4,1fr)}
+  .attendance-row{grid-template-columns:42px 42px 50px 1fr}
+}
+</style>
+
 </head>
 <body>
 <header><h1>Saints Hockey Attendance</h1></header>
@@ -16,9 +147,9 @@
       <div><label for="sessionSelect">Session from Schedule</label><select id="sessionSelect"><option>Loading sessions...</option></select></div>
     </div>
     <div class="mode-row">
-      <a class="main-btn" href="index.html">← Back to Schedule</a>
-      <button class="mode-btn active">✅ Attendance Taking</button>
-      <button class="mode-btn" onclick="loadAll()">🔄 Refresh</button>
+      <a class="main-btn" href="index.html">Back to Schedule</a>
+      <button class="mode-btn active">Attendance Taking</button>
+      <button class="mode-btn" onclick="loadAll()">Refresh</button>
     </div>
   </section>
 
@@ -51,13 +182,13 @@
   </section>
 
   <div class="footer-actions">
-    <button class="main-btn primary" onclick="downloadCsv()">⬇ Download CSV</button>
-    <a class="main-btn" href="index.html">← Back to Schedule</a>
+    <button class="main-btn primary" onclick="downloadCsv()">Download CSV</button>
+    <a class="main-btn" href="index.html">Back to Schedule</a>
   </div>
 
   <section class="list-summary">
-    <div class="list-box"><h3>✅ Present</h3><div id="presentList" class="name-list">No one marked present yet.</div></div>
-    <div class="list-box"><h3>❌ Absent / MC/PL</h3><div id="absenceList" class="name-list">No one marked absent or MC/PL yet.</div></div>
+    <div class="list-box"><h3>Present Present</h3><div id="presentList" class="name-list">No one marked present yet.</div></div>
+    <div class="list-box"><h3>Absent Absent / MC/PL</h3><div id="absenceList" class="name-list">No one marked absent or MC/PL yet.</div></div>
   </section>
 
   <section class="list-summary">
@@ -174,7 +305,7 @@
     const status=record.status||"Unmarked";
     const reason=record.reason||"";
     const statusClass=status.toLowerCase().replace(/[^a-z]/g,"");
-    return `<article class="student-card"><div class="student-top"><div class="name">${escapeHtml(student.name)} <span class="meta">${escapeHtml(student.className||"No class")} • ${escapeHtml(student.group)}</span></div><div class="status-pill ${statusClass}">${escapeHtml(status)}</div></div><div class="attendance-row"><button class="att-btn present" onclick="markAttendance('${student.id}', 'Present')">✅</button><button class="att-btn absent" onclick="markAttendance('${student.id}', 'Absent')">❌</button><button class="att-btn mc" onclick="markAttendance('${student.id}', 'MC/Parent Letter'); window.open('${MC_PARENT_LETTER_UPLOAD_LINK}', '_blank')">MC/PL</button><input class="reason-input" id="reason-${student.id}" value="${escapeHtml(reason)}" placeholder="Reason for Absence" onchange="saveReason('${student.id}', this.value)" /></div></article>`;
+    return `<article class="student-card"><div class="student-top"><div class="name">${escapeHtml(student.name)} <span class="meta">${escapeHtml(student.className||"No class")} • ${escapeHtml(student.group)}</span></div><div class="status-pill ${statusClass}">${escapeHtml(status)}</div></div><div class="attendance-row"><button class="att-btn present" onclick="markAttendance('${student.id}', 'Present')">Present</button><button class="att-btn absent" onclick="markAttendance('${student.id}', 'Absent')">Absent</button><button class="att-btn mc" onclick="markAttendance('${student.id}', 'MC/Parent Letter'); window.open('${MC_PARENT_LETTER_UPLOAD_LINK}', '_blank')">MC/PL</button><input class="reason-input" id="reason-${student.id}" value="${escapeHtml(reason)}" placeholder="Reason for Absence" onchange="saveReason('${student.id}', this.value)" /></div></article>`;
   }
 
   function renderStudents(){
