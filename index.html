@@ -83,7 +83,7 @@ header h1{
   position:relative;
   z-index:1;
 }
-.announcement-box,.toolbar,.announcement-entry,.card,.empty,.loading,.error{
+.announcement-box,.toolbar,.card,.empty,.loading,.error{
   background:rgba(13,24,40,.86);
   border:1px solid rgba(148,169,195,.20);
   border-radius:16px;
@@ -125,17 +125,6 @@ header h1{
   color:var(--accent2);
   font-weight:800;
   margin-bottom:3px;
-}
-.delete-announcement{
-  margin-top:6px;
-  border:1px solid rgba(248,113,113,.45);
-  background:linear-gradient(180deg,rgba(127,29,29,.55),rgba(69,10,10,.45));
-  color:#fecaca;
-  border-radius:8px;
-  padding:5px 9px;
-  font-size:10px;
-  font-weight:800;
-  cursor:pointer;
 }
 .toolbar{
   padding:10px;
@@ -268,16 +257,6 @@ input:focus,textarea:focus,select:focus{border-color:rgba(45,212,191,.65);box-sh
   border-top:1px solid rgba(148,169,195,.13);
   padding-top:8px;
 }
-.announcement-entry{
-  padding:12px;
-  margin-top:14px;
-}
-.announcement-entry h2{
-  margin:0 0 10px;
-  font-size:15px;
-  color:#fff;
-}
-.form-row{margin-bottom:8px}
 .empty,.loading,.error{
   padding:18px;
   text-align:center;
@@ -329,29 +308,11 @@ input:focus,textarea:focus,select:focus{border-color:rgba(45,212,191,.65);box-sh
   </div>
 
   <section id="scheduleContainer"><div class="loading">Loading schedule...</div></section>
-
-  <section class="announcement-entry">
-    <h2>➕ Add Announcement</h2>
-
-    <div class="form-row">
-      <label for="announcementDate">Date / Label</label>
-      <input id="announcementDate" type="text" placeholder="e.g. 3 Jun 2026 or Reminder" />
-    </div>
-
-    <div class="form-row">
-      <label for="announcementText">Announcement</label>
-      <textarea id="announcementText" placeholder="Type announcement here..."></textarea>
-    </div>
-
-    <button class="btn" onclick="addAnnouncement()">Add Announcement</button>
-    <button class="btn secondary" onclick="clearAnnouncementForm()">Clear</button>
-  </section>
-
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBTKW9nlCQK-1ktvEu8at4-KRLjIwbz660",
@@ -366,7 +327,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
-const ADMIN_PIN = "K#8vQ!3mX@7rL$2pN9&f";
 let schedule = [];
 
 const fallbackMapLinks = {
@@ -379,14 +339,6 @@ function escapeHtml(text){return String(text ?? "").replaceAll("&","&amp;").repl
 function safeId(text){return String(text ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}
 function normaliseHeader(header){return String(header||"").toLowerCase().replace(/\s+/g,"")}
 
-function checkPin(){
-  const pin = prompt("Enter Admin PIN:");
-  if(pin !== ADMIN_PIN){
-    alert("Incorrect PIN.");
-    return false;
-  }
-  return true;
-}
 
 function csvToRows(text){
   const rows=[];let row=[],cell="",insideQuotes=false;
@@ -519,7 +471,6 @@ function loadAnnouncements(){
         <div class="announcement-item">
           <div class="announcement-date">${escapeHtml(item.date || "Announcement")}</div>
           <div>${escapeHtml(item.text || "")}</div>
-          <button class="delete-announcement" onclick="deleteAnnouncement('${docSnap.id}')">Delete</button>
         </div>
       `;
     }).join("");
@@ -529,46 +480,10 @@ function loadAnnouncements(){
   });
 }
 
-async function addAnnouncement(){
-  if(!checkPin()) return;
-
-  const date = document.getElementById("announcementDate").value.trim();
-  const text = document.getElementById("announcementText").value.trim();
-
-  if(!text){
-    alert("Please type an announcement.");
-    return;
-  }
-
-  await addDoc(collection(db,"announcements"),{
-    date: date || "Announcement",
-    text,
-    createdAt: serverTimestamp()
-  });
-
-  clearAnnouncementForm();
-}
-
-async function deleteAnnouncement(id){
-  if(!checkPin()) return;
-
-  if(confirm("Delete this announcement?")){
-    await deleteDoc(doc(db,"announcements",id));
-  }
-}
-
-function clearAnnouncementForm(){
-  document.getElementById("announcementDate").value = "";
-  document.getElementById("announcementText").value = "";
-}
-
 document.getElementById("searchInput").addEventListener("input",renderSchedule);
 
 window.loadSchedule=loadSchedule;
 window.loadAnnouncements=loadAnnouncements;
-window.addAnnouncement=addAnnouncement;
-window.deleteAnnouncement=deleteAnnouncement;
-window.clearAnnouncementForm=clearAnnouncementForm;
 
 loadAnnouncements();
 loadSchedule();
