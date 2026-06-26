@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saints Hockey Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box}
+body{margin:0;font-family:Outfit,Arial,sans-serif;background:linear-gradient(180deg,#07111f,#050b14);color:#eef5ff;min-height:100vh}
+header{padding:18px 16px;background:#07111f;border-bottom:1px solid #25324a}
+.wrap{max-width:900px;margin:0 auto}
+h1{margin:0;font-size:30px} .tag{color:#f6c453;font-weight:800;margin-top:5px}
+.panel{max-width:900px;margin:18px auto;padding:16px;border:1px solid #25324a;border-radius:22px;background:#0e1728}
+label{display:block;margin:12px 0 6px;color:#b9c8dc;font-weight:800;font-size:12px}
+input,textarea{width:100%;padding:13px;border-radius:14px;border:1px solid #25324a;background:#070e1c;color:#eef5ff;font:inherit}
+textarea{min-height:100px}
+button,a{display:inline-block;margin:10px 8px 0 0;padding:11px 14px;border-radius:14px;border:1px solid #25324a;background:#132641;color:#eef5ff;text-decoration:none;font-weight:800;cursor:pointer}
+.primary{background:linear-gradient(135deg,#14b8a6,#22c55e);color:#04111d;border:0}
+.danger{background:rgba(251,113,133,.16);color:#fecdd3;border-color:rgba(251,113,133,.4)}
+.hidden{display:none}
+.item{padding:12px;margin:10px 0;border:1px solid #25324a;border-radius:16px;background:#0b1526}
+.date{color:#b9c8dc;font-size:12px;font-weight:800;margin-bottom:5px}
+.status{color:#b9c8dc;margin-top:8px}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>Saints Hockey Admin</h1><div class="tag">Pride. Passion. Perseverance.</div></div></header>
+
+<section id="loginPanel" class="panel">
+<h2>Admin Login</h2>
+<p>Public users do not need to log in. Only admin logs in to manage announcements.</p>
+<label>Email</label><input id="email" type="email">
+<label>Password</label><input id="password" type="password">
+<button class="primary" onclick="login()">Login</button><a href="index.html">Back to Schedule</a>
+<div id="loginStatus" class="status"></div>
+</section>
+
+<section id="adminPanel" class="panel hidden">
+<h2>Add Announcement</h2>
+<label>Date / Label</label><input id="announcementDate" placeholder="e.g. 3 Jul 2026">
+<label>Announcement</label><textarea id="announcementText"></textarea>
+<button class="primary" onclick="addAnnouncement()">Add Announcement</button>
+<button onclick="clearAnnouncementForm()">Clear</button>
+<button class="danger" onclick="logout()">Logout</button>
+<a href="index.html">Back to Schedule</a>
+<div id="adminStatus" class="status"></div>
+</section>
+
+<section id="listPanel" class="panel hidden">
+<h2>Existing Announcements</h2>
+<div id="announcementList">Loading...</div>
+</section>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBTKW9nlCQK-1ktvEu8at4-KRLjIwbz660",
+    authDomain: "saintshockeyattendance.firebaseapp.com",
+    projectId: "saintshockeyattendance",
+    storageBucket: "saintshockeyattendance.firebasestorage.app",
+    messagingSenderId: "717790587080",
+    appId: "1:717790587080:web:cd9e1a07d580566f3f1dfd"
+  };
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+let unsub = null;
+
+function esc(t){return String(t??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function status(id,msg){document.getElementById(id).textContent=msg||""}
+
+async function login(){
+  try{
+    status("loginStatus","Logging in...");
+    await signInWithEmailAndPassword(auth, document.getElementById("email").value.trim(), document.getElementById("password").value);
+    status("loginStatus","");
+  }catch(e){console.error(e);status("loginStatus","Login failed. Check email/password.")}
+}
+async function logout(){await signOut(auth)}
+
+function loadAnnouncements(){
+  const box=document.getElementById("announcementList");
+  if(unsub) unsub();
+  unsub=onSnapshot(collection(db,"announcements"), snap=>{
+    if(snap.empty){box.innerHTML='<div class="item">No announcements yet.</div>';return}
+    const docs=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>((b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0)));
+    box.innerHTML=docs.map(x=>`<div class="item"><div class="date">${esc(x.date||"Announcement")}</div><div>${esc(x.text||"")}</div><button class="danger" onclick="deleteAnnouncement('${x.id}')">Delete</button></div>`).join("");
+  }, e=>{console.error(e);box.innerHTML='<div class="item">Unable to load announcements. Check Firebase rules.</div>'});
+}
+async function addAnnouncement(){
+  const date=document.getElementById("announcementDate").value.trim();
+  const text=document.getElementById("announcementText").value.trim();
+  if(!text){status("adminStatus","Please type an announcement.");return}
+  try{
+    await addDoc(collection(db,"announcements"), {date:date||"Announcement", text, createdAt:serverTimestamp()});
+    clearAnnouncementForm(); status("adminStatus","Announcement added.");
+  }catch(e){console.error(e);status("adminStatus","Unable to add. Check login/rules.")}
+}
+async function deleteAnnouncement(id){
+  if(!confirm("Delete this announcement?")) return;
+  try{await deleteDoc(doc(db,"announcements",id));status("adminStatus","Announcement deleted.")}
+  catch(e){console.error(e);status("adminStatus","Unable to delete. Check login/rules.")}
+}
+function clearAnnouncementForm(){document.getElementById("announcementDate").value="";document.getElementById("announcementText").value=""}
+
+onAuthStateChanged(auth, user=>{
+  document.getElementById("loginPanel").classList.toggle("hidden", !!user);
+  document.getElementById("adminPanel").classList.toggle("hidden", !user);
+  document.getElementById("listPanel").classList.toggle("hidden", !user);
+  if(user) loadAnnouncements(); else if(unsub){unsub();unsub=null}
+});
+
+window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm;
+</script>
+</body>
+</html>
