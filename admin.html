@@ -28,7 +28,6 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{border-bottom:1px solid #25324a;padding:8px;text-align:left;white-space:nowrap}
 th{color:#b9c8dc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 .count-pill{display:inline-block;margin:6px 8px 0 0;padding:6px 10px;border-radius:999px;background:#0b1526;border:1px solid #25324a;color:#dbeafe;font-weight:800;font-size:12px}
-
 </style>
 </head>
 <body>
@@ -36,7 +35,6 @@ th{color:#b9c8dc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 
 <section id="loginPanel" class="panel">
 <h2>Admin Login</h2>
-
 <label>Email</label><input id="email" type="email">
 <label>Password</label><input id="password" type="password">
 <button class="primary" onclick="login()">Login</button><a href="index.html">Back to Schedule</a>
@@ -57,6 +55,27 @@ th{color:#b9c8dc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 <section id="listPanel" class="panel hidden">
 <h2>Existing Announcements</h2>
 <div id="announcementList">Loading...</div>
+</section>
+
+
+<section id="attendancePanel" class="panel hidden">
+<h2>Check Attendance Records</h2>
+<label>From Date</label><input id="attendanceFromDate" type="date">
+<button class="primary" onclick="loadAttendanceAfterDate()">Load Attendance</button>
+<button onclick="loadAllAttendance()">Show All</button>
+<button onclick="downloadAttendanceCsv()">Download CSV</button>
+<div id="attendanceStatus" class="status"></div>
+<div id="attendanceSummary"></div>
+<div class="table-wrap">
+  <table id="attendanceTable">
+    <thead>
+      <tr>
+        <th>Date</th><th>Session</th><th>Name</th><th>Class</th><th>Group</th><th>Status</th><th>Reason</th><th>Updated</th>
+      </tr>
+    </thead>
+    <tbody><tr><td colspan="8">Login and choose a date, or click Show All.</td></tr></tbody>
+  </table>
+</div>
 </section>
 
 <script type="module">
@@ -114,7 +133,6 @@ async function deleteAnnouncement(id){
 }
 function clearAnnouncementForm(){document.getElementById("announcementDate").value="";document.getElementById("announcementText").value=""}
 
-
 let loadedAttendanceRows = [];
 
 function normaliseDateValue(dateText){
@@ -135,62 +153,78 @@ function normaliseDateValue(dateText){
   return "";
 }
 
-async function loadAttendanceAfterDate(){
-  const fromDate=document.getElementById("attendanceFromDate").value;
+function renderAttendanceRows(rows, message){
   const tbody=document.querySelector("#attendanceTable tbody");
   const summary=document.getElementById("attendanceSummary");
-  loadedAttendanceRows=[];
+  loadedAttendanceRows=rows;
   summary.innerHTML="";
-  if(!fromDate){
-    document.getElementById("attendanceStatus").textContent="Choose a date first.";
+
+  if(!rows.length){
+    tbody.innerHTML=`<tr><td colspan="8">${message || "No attendance records found."}</td></tr>`;
+    document.getElementById("attendanceStatus").textContent=message || "No records found.";
     return;
   }
 
+  const present=rows.filter(r=>r.status==="Present").length;
+  const absent=rows.filter(r=>r.status==="Absent").length;
+  const mc=rows.filter(r=>r.status==="MC/Parent Letter").length;
+
+  summary.innerHTML=`
+    <span class="count-pill">Total: ${rows.length}</span>
+    <span class="count-pill">Present: ${present}</span>
+    <span class="count-pill">Absent: ${absent}</span>
+    <span class="count-pill">MC/PL: ${mc}</span>
+  `;
+
+  tbody.innerHTML=rows.map(r=>`
+    <tr>
+      <td>${esc(r.date||"")}</td>
+      <td>${esc(r.sessionLabel||"")}</td>
+      <td>${esc(r.name||"")}</td>
+      <td>${esc(r.className||"")}</td>
+      <td>${esc(r.group||"")}</td>
+      <td>${esc(r.status||"")}</td>
+      <td>${esc(r.reason||"")}</td>
+      <td>${esc(r.updatedAt||"")}</td>
+    </tr>
+  `).join("");
+  document.getElementById("attendanceStatus").textContent=`Loaded ${rows.length} records.`;
+}
+
+async function getAttendanceRows(){
+  const snap=await getDocs(query(collection(db,"teacherAttendanceRecords"), orderBy("updatedAt","desc")));
+  return snap.docs
+    .map(d=>({id:d.id,...d.data()}))
+    .map(r=>({...r, normalisedDate: normaliseDateValue(r.date)}))
+    .sort((a,b)=>(a.normalisedDate||"").localeCompare(b.normalisedDate||"") || (a.sessionLabel||"").localeCompare(b.sessionLabel||"") || (a.name||"").localeCompare(b.name||""));
+}
+
+async function loadAttendanceAfterDate(){
+  const fromDate=document.getElementById("attendanceFromDate").value;
+  if(!fromDate){
+    document.getElementById("attendanceStatus").textContent="Choose a date first, or click Show All.";
+    return;
+  }
   try{
     document.getElementById("attendanceStatus").textContent="Loading attendance...";
-    tbody.innerHTML='<tr><td colspan="8">Loading...</td></tr>';
-
-    const snap=await getDocs(query(collection(db,"teacherAttendanceRecords"), orderBy("updatedAt","desc")));
-    loadedAttendanceRows=snap.docs
-      .map(d=>({id:d.id,...d.data()}))
-      .map(r=>({...r, normalisedDate: normaliseDateValue(r.date)}))
-      .filter(r=>r.normalisedDate && r.normalisedDate>=fromDate)
-      .sort((a,b)=>(a.normalisedDate||"").localeCompare(b.normalisedDate||"") || (a.sessionLabel||"").localeCompare(b.sessionLabel||"") || (a.name||"").localeCompare(b.name||""));
-
-    if(!loadedAttendanceRows.length){
-      tbody.innerHTML='<tr><td colspan="8">No attendance records found from this date.</td></tr>';
-      document.getElementById("attendanceStatus").textContent="No records found.";
-      return;
-    }
-
-    const present=loadedAttendanceRows.filter(r=>r.status==="Present").length;
-    const absent=loadedAttendanceRows.filter(r=>r.status==="Absent").length;
-    const mc=loadedAttendanceRows.filter(r=>r.status==="MC/Parent Letter").length;
-
-    summary.innerHTML=`
-      <span class="count-pill">Total: ${loadedAttendanceRows.length}</span>
-      <span class="count-pill">Present: ${present}</span>
-      <span class="count-pill">Absent: ${absent}</span>
-      <span class="count-pill">MC/PL: ${mc}</span>
-    `;
-
-    tbody.innerHTML=loadedAttendanceRows.map(r=>`
-      <tr>
-        <td>${esc(r.date||"")}</td>
-        <td>${esc(r.sessionLabel||"")}</td>
-        <td>${esc(r.name||"")}</td>
-        <td>${esc(r.className||"")}</td>
-        <td>${esc(r.group||"")}</td>
-        <td>${esc(r.status||"")}</td>
-        <td>${esc(r.reason||"")}</td>
-        <td>${esc(r.updatedAt||"")}</td>
-      </tr>
-    `).join("");
-
-    document.getElementById("attendanceStatus").textContent=`Loaded ${loadedAttendanceRows.length} records.`;
+    document.querySelector("#attendanceTable tbody").innerHTML='<tr><td colspan="8">Loading...</td></tr>';
+    const rows=(await getAttendanceRows()).filter(r=>r.normalisedDate && r.normalisedDate>=fromDate);
+    renderAttendanceRows(rows,"No attendance records found from this date.");
   }catch(e){
     console.error(e);
-    tbody.innerHTML='<tr><td colspan="8">Unable to load attendance. Check Firebase login/rules.</td></tr>';
+    document.querySelector("#attendanceTable tbody").innerHTML='<tr><td colspan="8">Unable to load attendance. Check Firebase login/rules.</td></tr>';
+    document.getElementById("attendanceStatus").textContent="Unable to load attendance.";
+  }
+}
+
+async function loadAllAttendance(){
+  try{
+    document.getElementById("attendanceStatus").textContent="Loading all attendance...";
+    document.querySelector("#attendanceTable tbody").innerHTML='<tr><td colspan="8">Loading...</td></tr>';
+    renderAttendanceRows(await getAttendanceRows(),"No attendance records found yet.");
+  }catch(e){
+    console.error(e);
+    document.querySelector("#attendanceTable tbody").innerHTML='<tr><td colspan="8">Unable to load attendance. Check Firebase login/rules.</td></tr>';
     document.getElementById("attendanceStatus").textContent="Unable to load attendance.";
   }
 }
@@ -200,18 +234,14 @@ function downloadAttendanceCsv(){
     document.getElementById("attendanceStatus").textContent="Load attendance first.";
     return;
   }
-
   const rows=[["Date","Session","Name","Class","Group","Status","Reason","Updated At"]];
-  loadedAttendanceRows.forEach(r=>rows.push([
-    r.date||"",r.sessionLabel||"",r.name||"",r.className||"",r.group||"",r.status||"",r.reason||"",r.updatedAt||""
-  ]));
-
+  loadedAttendanceRows.forEach(r=>rows.push([r.date||"",r.sessionLabel||"",r.name||"",r.className||"",r.group||"",r.status||"",r.reason||"",r.updatedAt||""]));
   const csv=rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
   const blob=new Blob([csv],{type:"text/csv"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
   a.href=url;
-  a.download=`attendance_from_${document.getElementById("attendanceFromDate").value||"selected_date"}.csv`;
+  a.download=`attendance_${document.getElementById("attendanceFromDate").value||"all"}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -221,10 +251,11 @@ onAuthStateChanged(auth, user=>{
   document.getElementById("loginPanel").classList.toggle("hidden", !!user);
   document.getElementById("adminPanel").classList.toggle("hidden", !user);
   document.getElementById("listPanel").classList.toggle("hidden", !user);
+  document.getElementById("attendancePanel").classList.toggle("hidden", !user);
   if(user) loadAnnouncements(); else if(unsub){unsub();unsub=null}
 });
 
-window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm; window.loadAttendanceAfterDate=loadAttendanceAfterDate; window.downloadAttendanceCsv=downloadAttendanceCsv;
+window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm; window.loadAttendanceAfterDate=loadAttendanceAfterDate; window.loadAllAttendance=loadAllAttendance; window.downloadAttendanceCsv=downloadAttendanceCsv;
 </script>
 </body>
 </html>
