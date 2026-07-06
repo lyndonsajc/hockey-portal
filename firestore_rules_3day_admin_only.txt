@@ -1,0 +1,101 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email == "chua_chun_lin_lyndon@moe.edu.sg";
+    }
+
+    function validStatus() {
+      return request.resource.data.status in [
+        'Present',
+        'Absent',
+        'MC/Parent Letter',
+        'Unmarked'
+      ];
+    }
+
+    match /announcements/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Public attendance page can create/update only while the session is within the 3-day window.
+    // After that, only admin can change it.
+    match /attendance/{sessionId}/records/{studentId} {
+      allow read: if true;
+
+      allow create, update: if isAdmin()
+        || (
+          request.time < timestamp.value(request.resource.data.editableUntil)
+          && request.resource.data.keys().hasOnly([
+            'studentId',
+            'name',
+            'className',
+            'group',
+            'gender',
+            'status',
+            'reason',
+            'sessionId',
+            'sessionLabel',
+            'sessionDate',
+            'editableUntil',
+            'updatedAt',
+            'timestamp'
+          ])
+          && validStatus()
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /teacherAttendanceRecords/{recordId} {
+      allow read: if isAdmin();
+
+      allow create, update: if isAdmin()
+        || (
+          request.time < timestamp.value(request.resource.data.editableUntil)
+          && request.resource.data.keys().hasOnly([
+            'sessionId',
+            'sessionLabel',
+            'date',
+            'day',
+            'start',
+            'end',
+            'venue',
+            'remarks',
+            'studentId',
+            'name',
+            'className',
+            'group',
+            'gender',
+            'status',
+            'reason',
+            'sessionDate',
+            'editableUntil',
+            'updatedAt',
+            'timestamp'
+          ])
+          && validStatus()
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /attendanceSessions/{sessionId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

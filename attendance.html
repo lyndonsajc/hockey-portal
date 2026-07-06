@@ -416,8 +416,7 @@
       cursor:pointer;
       display:none;
     }
-
-    @media(max-width:760px){
+@media(max-width:760px){
       header{padding:14px 14px 12px}
       .hero{gap:10px}
       .crest{width:52px;height:52px;border-radius:14px}
@@ -498,8 +497,7 @@
       <div class="loading">Loading students...</div>
     </div>
   </section>
-
-  <div class="footer-actions">
+<div class="footer-actions">
     <button class="main-btn primary" onclick="downloadCsv()">Download CSV</button>
     <a class="main-btn" href="index.html">← Back to Schedule</a>
   </div>
@@ -565,7 +563,15 @@
     const parsed=new Date(clean);return isNaN(parsed.getTime())?null:parsed;
   }
 
-  function isTodayOrFuture(item){const d=scheduleDateObject(item.date);if(!d)return true;const today=new Date();today.setHours(0,0,0,0);d.setHours(0,0,0,0);return d>=today;}
+  function isTodayOrFuture(item){
+    const d=scheduleDateObject(item.date);
+    if(!d)return true;
+    const cutoff=new Date();
+    cutoff.setHours(0,0,0,0);
+    cutoff.setDate(cutoff.getDate()-3);
+    d.setHours(0,0,0,0);
+    return d>=cutoff;
+  }
 
   function rowsToScheduleObjects(rows){
     if(!rows.length)return[];
@@ -607,11 +613,39 @@
     const sessionParam=params.get("session");
     select.innerHTML=sessions.length?sessions.map(s=>`<option value="${s.id}">${escapeHtml(s.label)}</option>`).join(""):`<option value="">No upcoming sessions</option>`;
     if(sessionParam && sessions.some(s=>s.id===sessionParam))select.value=sessionParam;
+
   }
 
   async function loadStudents(){
     const csvText=await fetchCsv(STUDENT_CSV_URL);
     students=rowsToStudentObjects(csvToRows(csvText));
+  }
+
+
+
+  function sessionIsoDate(session){
+    const d=scheduleDateObject(session?.date);
+    if(!d)return "";
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+
+  function sessionEditableUntil(session){
+    const d=scheduleDateObject(session?.date);
+    if(!d)return "";
+    d.setHours(23,59,59,999);
+    d.setDate(d.getDate()+3);
+    return d.toISOString();
+  }
+
+  function sessionIsStillPubliclyEditable(session){
+    if(!session)return false;
+    const d=scheduleDateObject(session.date);
+    if(!d)return true;
+    const cutoff=new Date();
+    cutoff.setHours(0,0,0,0);
+    cutoff.setDate(cutoff.getDate()-3);
+    d.setHours(0,0,0,0);
+    return d>=cutoff;
   }
 
   function selectedSession(){const id=document.getElementById("sessionSelect").value;return sessions.find(s=>s.id===id)||null;}
@@ -667,17 +701,18 @@
 
   async function saveTeacherRecord(session, student, status, reason){
     const recordId=`${session.id}_${student.id}`;
-    const payload={sessionId:session.id,sessionLabel:session.label,date:session.date||"",day:session.day||"",start:session.start||"",end:session.end||"",venue:session.venue||"",remarks:session.remarks||"",studentId:student.id,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()};
+    const payload={sessionId:session.id,sessionLabel:session.label,date:session.date||"",day:session.day||"",start:session.start||"",end:session.end||"",venue:session.venue||"",remarks:session.remarks||"",studentId:student.id,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionDate:sessionIsoDate(session),editableUntil:sessionEditableUntil(session),updatedAt:new Date().toISOString(),timestamp:serverTimestamp()};
     await setDoc(doc(db,"teacherAttendanceRecords",recordId),payload,{merge:true});
-    await setDoc(doc(db,"attendanceSessions",session.id),{sessionId:session.id,sessionLabel:session.label,date:session.date||"",day:session.day||"",start:session.start||"",end:session.end||"",venue:session.venue||"",remarks:session.remarks||"",updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
+    await setDoc(doc(db,"attendanceSessions",session.id),{sessionId:session.id,sessionLabel:session.label,date:session.date||"",day:session.day||"",start:session.start||"",end:session.end||"",venue:session.venue||"",remarks:session.remarks||"",sessionDate:sessionIsoDate(session),editableUntil:sessionEditableUntil(session),updatedAt:new Date().toISOString(),timestamp:serverTimestamp()},{merge:true});
   }
 
   async function markAttendance(studentId,status){
     const session=selectedSession();
     const student=students.find(s=>s.id===studentId);
     if(!session||!student){alert("Select a valid session first.");return;}
+    if(!sessionIsStillPubliclyEditable(session)){alert("This attendance session is locked. Only admin can change it now.");return;}
     const reason=document.getElementById(`reason-${studentId}`)?.value||attendance[studentId]?.reason||"";
-    const payload={studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()};
+    const payload={studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,sessionDate:sessionIsoDate(session),editableUntil:sessionEditableUntil(session),updatedAt:new Date().toISOString(),timestamp:serverTimestamp()};
     await setDoc(doc(db,"attendance",session.id,"records",studentId),payload,{merge:true});
     await saveTeacherRecord(session,student,status,reason);
     attendance[studentId]={...(attendance[studentId]||{}),status,reason};
@@ -689,13 +724,15 @@
     const session=selectedSession();
     const student=students.find(s=>s.id===studentId);
     if(!session||!student)return;
+    if(!sessionIsStillPubliclyEditable(session)){alert("This attendance session is locked. Only admin can change it now.");return;}
     const status=attendance[studentId]?.status||"Unmarked";
-    const payload={studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,updatedAt:new Date().toISOString(),timestamp:serverTimestamp()};
+    const payload={studentId,name:student.name,className:student.className,group:student.group,gender:student.gender,status,reason,sessionId:session.id,sessionLabel:session.label,sessionDate:sessionIsoDate(session),editableUntil:sessionEditableUntil(session),updatedAt:new Date().toISOString(),timestamp:serverTimestamp()};
     await setDoc(doc(db,"attendance",session.id,"records",studentId),payload,{merge:true});
     await saveTeacherRecord(session,student,status,reason);
     attendance[studentId]={...(attendance[studentId]||{}),reason};
     updateSummary();
   }
+
 
   function downloadCsv(){
     const session=selectedSession();

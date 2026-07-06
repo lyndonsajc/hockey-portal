@@ -22,12 +22,6 @@ button,a{display:inline-block;margin:10px 8px 0 0;padding:11px 14px;border-radiu
 .item{padding:12px;margin:10px 0;border:1px solid #25324a;border-radius:16px;background:#0b1526}
 .date{color:#b9c8dc;font-size:12px;font-weight:800;margin-bottom:5px}
 .status{color:#b9c8dc;margin-top:8px}
-
-.table-wrap{overflow-x:auto;margin-top:12px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{border-bottom:1px solid #25324a;padding:8px;text-align:left;white-space:nowrap}
-th{color:#b9c8dc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
-.count-pill{display:inline-block;margin:6px 8px 0 0;padding:6px 10px;border-radius:999px;background:#0b1526;border:1px solid #25324a;color:#dbeafe;font-weight:800;font-size:12px}
 </style>
 </head>
 <body>
@@ -35,6 +29,7 @@ th{color:#b9c8dc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 
 <section id="loginPanel" class="panel">
 <h2>Admin Login</h2>
+<p>Public users do not need to log in. Only admin logs in to manage announcements.</p>
 <label>Email</label><input id="email" type="email">
 <label>Password</label><input id="password" type="password">
 <button class="primary" onclick="login()">Login</button><a href="index.html">Back to Schedule</a>
@@ -57,30 +52,9 @@ th{color:#b9c8dc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 <div id="announcementList">Loading...</div>
 </section>
 
-
-<section id="attendancePanel" class="panel hidden">
-<h2>Check Attendance Records</h2>
-<label>From Date</label><input id="attendanceFromDate" type="date">
-<button class="primary" onclick="loadAttendanceAfterDate()">Load Attendance</button>
-<button onclick="loadAllAttendance()">Show All</button>
-<button onclick="downloadAttendanceCsv()">Download CSV</button>
-<div id="attendanceStatus" class="status"></div>
-<div id="attendanceSummary"></div>
-<div class="table-wrap">
-  <table id="attendanceTable">
-    <thead>
-      <tr>
-        <th>Date</th><th>Session</th><th>Name</th><th>Class</th><th>Group</th><th>Status</th><th>Reason</th><th>Updated</th>
-      </tr>
-    </thead>
-    <tbody><tr><td colspan="8">Login and choose a date, or click Show All.</td></tr></tbody>
-  </table>
-</div>
-</section>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 const firebaseConfig = {
@@ -133,117 +107,47 @@ async function deleteAnnouncement(id){
 }
 function clearAnnouncementForm(){document.getElementById("announcementDate").value="";document.getElementById("announcementText").value=""}
 
-let loadedAttendanceRows = [];
 
-function normaliseDateValue(dateText){
-  if(!dateText) return "";
-  const monthMap={jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12"};
-  const clean=String(dateText).trim();
-  if(/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
-  const parts=clean.split("-");
-  if(parts.length>=2){
-    const day=String(Number(parts[0])).padStart(2,"0");
-    const month=monthMap[String(parts[1]).slice(0,3).toLowerCase()];
-    if(month) return `2026-${month}-${day}`;
-  }
-  const parsed=new Date(clean);
-  if(!isNaN(parsed.getTime())){
-    return `${parsed.getFullYear()}-${String(parsed.getMonth()+1).padStart(2,"0")}-${String(parsed.getDate()).padStart(2,"0")}`;
-  }
-  return "";
-}
-
-function renderAttendanceRows(rows, message){
-  const tbody=document.querySelector("#attendanceTable tbody");
-  const summary=document.getElementById("attendanceSummary");
-  loadedAttendanceRows=rows;
-  summary.innerHTML="";
-
-  if(!rows.length){
-    tbody.innerHTML=`<tr><td colspan="8">${message || "No attendance records found."}</td></tr>`;
-    document.getElementById("attendanceStatus").textContent=message || "No records found.";
+async function adminUpdateAttendance(recordId, status){
+  const record = loadedAttendanceRows.find(r => r.id === recordId);
+  if(!record){
+    alert("Record not found.");
     return;
   }
-
-  const present=rows.filter(r=>r.status==="Present").length;
-  const absent=rows.filter(r=>r.status==="Absent").length;
-  const mc=rows.filter(r=>r.status==="MC/Parent Letter").length;
-
-  summary.innerHTML=`
-    <span class="count-pill">Total: ${rows.length}</span>
-    <span class="count-pill">Present: ${present}</span>
-    <span class="count-pill">Absent: ${absent}</span>
-    <span class="count-pill">MC/PL: ${mc}</span>
-  `;
-
-  tbody.innerHTML=rows.map(r=>`
-    <tr>
-      <td>${esc(r.date||"")}</td>
-      <td>${esc(r.sessionLabel||"")}</td>
-      <td>${esc(r.name||"")}</td>
-      <td>${esc(r.className||"")}</td>
-      <td>${esc(r.group||"")}</td>
-      <td>${esc(r.status||"")}</td>
-      <td>${esc(r.reason||"")}</td>
-      <td>${esc(r.updatedAt||"")}</td>
-    </tr>
-  `).join("");
-  document.getElementById("attendanceStatus").textContent=`Loaded ${rows.length} records.`;
-}
-
-async function getAttendanceRows(){
-  const snap=await getDocs(query(collection(db,"teacherAttendanceRecords"), orderBy("updatedAt","desc")));
-  return snap.docs
-    .map(d=>({id:d.id,...d.data()}))
-    .map(r=>({...r, normalisedDate: normaliseDateValue(r.date)}))
-    .sort((a,b)=>(a.normalisedDate||"").localeCompare(b.normalisedDate||"") || (a.sessionLabel||"").localeCompare(b.sessionLabel||"") || (a.name||"").localeCompare(b.name||""));
-}
-
-async function loadAttendanceAfterDate(){
-  const fromDate=document.getElementById("attendanceFromDate").value;
-  if(!fromDate){
-    document.getElementById("attendanceStatus").textContent="Choose a date first, or click Show All.";
-    return;
-  }
+  const reason = prompt("Reason for absence / note:", record.reason || "") ?? record.reason || "";
   try{
-    document.getElementById("attendanceStatus").textContent="Loading attendance...";
-    document.querySelector("#attendanceTable tbody").innerHTML='<tr><td colspan="8">Loading...</td></tr>';
-    const rows=(await getAttendanceRows()).filter(r=>r.normalisedDate && r.normalisedDate>=fromDate);
-    renderAttendanceRows(rows,"No attendance records found from this date.");
+    await setDoc(doc(db,"teacherAttendanceRecords",recordId), {
+      ...record,
+      status,
+      reason,
+      updatedAt:new Date().toISOString(),
+      timestamp:serverTimestamp()
+    }, {merge:true});
+
+    if(record.sessionId && record.studentId){
+      await setDoc(doc(db,"attendance",record.sessionId, "records", record.studentId), {
+        studentId:record.studentId,
+        name:record.name || "",
+        className:record.className || "",
+        group:record.group || "",
+        gender:record.gender || "",
+        status,
+        reason,
+        sessionId:record.sessionId,
+        sessionLabel:record.sessionLabel || "",
+        sessionDate:record.sessionDate || "",
+        editableUntil:record.editableUntil || "",
+        updatedAt:new Date().toISOString(),
+        timestamp:serverTimestamp()
+      }, {merge:true});
+    }
+
+    alert("Attendance updated.");
+    if(typeof loadAttendanceAfterDate === "function") loadAttendanceAfterDate();
   }catch(e){
     console.error(e);
-    document.querySelector("#attendanceTable tbody").innerHTML='<tr><td colspan="8">Unable to load attendance. Check Firebase login/rules.</td></tr>';
-    document.getElementById("attendanceStatus").textContent="Unable to load attendance.";
+    alert("Unable to update attendance. Check admin login/rules.");
   }
-}
-
-async function loadAllAttendance(){
-  try{
-    document.getElementById("attendanceStatus").textContent="Loading all attendance...";
-    document.querySelector("#attendanceTable tbody").innerHTML='<tr><td colspan="8">Loading...</td></tr>';
-    renderAttendanceRows(await getAttendanceRows(),"No attendance records found yet.");
-  }catch(e){
-    console.error(e);
-    document.querySelector("#attendanceTable tbody").innerHTML='<tr><td colspan="8">Unable to load attendance. Check Firebase login/rules.</td></tr>';
-    document.getElementById("attendanceStatus").textContent="Unable to load attendance.";
-  }
-}
-
-function downloadAttendanceCsv(){
-  if(!loadedAttendanceRows.length){
-    document.getElementById("attendanceStatus").textContent="Load attendance first.";
-    return;
-  }
-  const rows=[["Date","Session","Name","Class","Group","Status","Reason","Updated At"]];
-  loadedAttendanceRows.forEach(r=>rows.push([r.date||"",r.sessionLabel||"",r.name||"",r.className||"",r.group||"",r.status||"",r.reason||"",r.updatedAt||""]));
-  const csv=rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
-  const blob=new Blob([csv],{type:"text/csv"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download=`attendance_${document.getElementById("attendanceFromDate").value||"all"}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 
@@ -251,11 +155,10 @@ onAuthStateChanged(auth, user=>{
   document.getElementById("loginPanel").classList.toggle("hidden", !!user);
   document.getElementById("adminPanel").classList.toggle("hidden", !user);
   document.getElementById("listPanel").classList.toggle("hidden", !user);
-  document.getElementById("attendancePanel").classList.toggle("hidden", !user);
   if(user) loadAnnouncements(); else if(unsub){unsub();unsub=null}
 });
 
-window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm; window.loadAttendanceAfterDate=loadAttendanceAfterDate; window.loadAllAttendance=loadAllAttendance; window.downloadAttendanceCsv=downloadAttendanceCsv;
+window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm;
 </script>
 </body>
 </html>
