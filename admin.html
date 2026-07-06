@@ -29,6 +29,27 @@ th,td{border-bottom:1px solid #25324a;padding:8px;text-align:left;white-space:no
 th{color:#b9c8dc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 .count-pill{display:inline-block;margin:6px 8px 0 0;padding:6px 10px;border-radius:999px;background:#0b1526;border:1px solid #25324a;color:#dbeafe;font-weight:800;font-size:12px}
 
+
+select{
+  width:100%;
+  padding:13px;
+  border-radius:14px;
+  border:1px solid #25324a;
+  background:#070e1c;
+  color:#eef5ff;
+  font:inherit;
+}
+.attendance-controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.attendance-status{min-width:140px}
+.reason-box{min-width:180px}
+@media(max-width:760px){
+  .attendance-controls{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -59,9 +80,52 @@ th{color:#b9c8dc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 <div id="announcementList">Loading...</div>
 </section>
 
+
+<section id="attendancePanel" class="panel hidden">
+<h2>Attendance Management</h2>
+
+<div class="attendance-controls">
+  <div>
+    <label>Session</label>
+    <select id="attendanceSessionSelect">
+      <option value="">Loading sessions...</option>
+    </select>
+  </div>
+  <div>
+    <label>Search Student / Class</label>
+    <input id="attendanceSearch" placeholder="Type name or class" oninput="renderAttendanceEditor()">
+  </div>
+</div>
+
+<button class="primary" onclick="loadSelectedAttendance()">Load Attendance</button>
+<button onclick="downloadAttendanceCsv()">Download CSV</button>
+
+<div id="attendanceStatus" class="status"></div>
+<div id="attendanceSummary"></div>
+
+<div class="table-wrap">
+  <table id="attendanceTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Class</th>
+        <th>Group</th>
+        <th>Status</th>
+        <th>Reason</th>
+        <th>Save</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="6">Choose a session and click Load Attendance.</td></tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, onSnapshot, serverTimestamp, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 const firebaseConfig = {
@@ -76,6 +140,11 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 let unsub = null;
+const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
+const STUDENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=1879195237";
+let attendanceSessions = [];
+let attendanceStudents = [];
+let selectedAttendanceSession = null;
 
 function esc(t){return String(t??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function status(id,msg){document.getElementById(id).textContent=msg||""}
@@ -113,6 +182,243 @@ async function deleteAnnouncement(id){
   catch(e){console.error(e);status("adminStatus","Unable to delete. Check login/rules.")}
 }
 function clearAnnouncementForm(){document.getElementById("announcementDate").value="";document.getElementById("announcementText").value=""}
+
+
+function normaliseHeader(header){return String(header||"").toLowerCase().replace(/\s+/g,"")}
+function safeId(text){return String(text??"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}
+
+function csvToRows(text){
+  const rows=[];let row=[],cell="",insideQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const char=text[i], next=text[i+1];
+    if(char==='"'&&insideQuotes&&next==='"'){cell+='"';i++}
+    else if(char==='"'){insideQuotes=!insideQuotes}
+    else if(char===','&&!insideQuotes){row.push(cell.trim());cell=""}
+    else if((char==='\n'||char==='\r')&&!insideQuotes){
+      if(cell||row.length){row.push(cell.trim());rows.push(row);row=[];cell=""}
+      if(char==='\r'&&next==='\n')i++;
+    } else {cell+=char}
+  }
+  if(cell||row.length){row.push(cell.trim());rows.push(row)}
+  return rows;
+}
+
+function rowsToScheduleObjects(rows){
+  if(!rows.length)return[];
+  const headers=rows[0].map(normaliseHeader);
+  return rows.slice(1).filter(row=>row.some(cell=>String(cell).trim()!=="")).map(row=>{
+    const obj={};headers.forEach((header,index)=>obj[header]=row[index]||"");
+    const item={
+      term:obj.term||"",
+      date:obj.date||"",
+      day:obj.day||"",
+      start:obj.start||obj.starttime||"",
+      end:obj.end||obj.endtime||"",
+      venue:obj.venue||"",
+      remarks:obj.remarks||"Training",
+      coach:obj.coach||"",
+      tic:obj.tic||""
+    };
+    item.id=safeId(`${item.date}-${item.day}-${item.start}-${item.end}-${item.venue}-${item.remarks}`);
+    item.label=`${item.date} ${item.day} ${item.start}-${item.end} ${item.venue} (${item.remarks})`;
+    return item;
+  }).filter(item=>item.date);
+}
+
+function rowsToStudentObjects(rows){
+  if(!rows.length)return[];
+  const headers=rows[0].map(normaliseHeader);
+  return rows.slice(1).filter(row=>row.some(cell=>String(cell).trim()!=="")).map((row,index)=>{
+    const obj={};headers.forEach((header,i)=>obj[header]=row[i]||"");
+    const name=obj.studentname||obj.name||"";
+    const className=obj.class||obj.classname||"";
+    const gender=(obj.mf||obj["m/f"]||obj.gender||obj.sex||"").trim().toUpperCase();
+    const group=gender==="M"?"Boys":gender==="F"?"Girls":"";
+    return {id:String(index+1).padStart(2,"0"),name,className,gender,group};
+  }).filter(s=>s.name);
+}
+
+async function fetchCsv(url){
+  const response=await fetch(url+"&cachebust="+Date.now(),{cache:"no-store"});
+  if(!response.ok)throw new Error("Unable to load CSV");
+  return response.text();
+}
+
+async function loadAttendanceSetup(){
+  const sessionSelect=document.getElementById("attendanceSessionSelect");
+  if(!sessionSelect)return;
+  try{
+    sessionSelect.innerHTML='<option value="">Loading sessions...</option>';
+    const [scheduleCsv, studentCsv]=await Promise.all([fetchCsv(SCHEDULE_CSV_URL), fetchCsv(STUDENT_CSV_URL)]);
+    attendanceSessions=rowsToScheduleObjects(csvToRows(scheduleCsv));
+    attendanceStudents=rowsToStudentObjects(csvToRows(studentCsv));
+    sessionSelect.innerHTML=attendanceSessions.length
+      ? attendanceSessions.map(s=>`<option value="${s.id}">${esc(s.label)}</option>`).join("")
+      : '<option value="">No sessions found</option>';
+    status("attendanceStatus", `Loaded ${attendanceSessions.length} sessions and ${attendanceStudents.length} students.`);
+  }catch(e){
+    console.error(e);
+    status("attendanceStatus","Unable to load sessions/students from Google Sheets.");
+  }
+}
+
+async function loadSelectedAttendance(){
+  const sessionId=document.getElementById("attendanceSessionSelect").value;
+  selectedAttendanceSession=attendanceSessions.find(s=>s.id===sessionId)||null;
+  if(!selectedAttendanceSession){
+    status("attendanceStatus","Choose a session first.");
+    return;
+  }
+
+  try{
+    status("attendanceStatus","Loading attendance records...");
+    const snap=await getDocs(collection(db,"attendance",sessionId,"records"));
+    const records={};
+    snap.docs.forEach(d=>records[d.id]=d.data());
+
+    loadedAttendanceRows=attendanceStudents.map(student=>{
+      const record=records[student.id]||{};
+      return {
+        studentId:student.id,
+        name:student.name,
+        className:student.className,
+        group:student.group,
+        gender:student.gender,
+        status:record.status||"Unmarked",
+        reason:record.reason||"",
+        sessionId:selectedAttendanceSession.id,
+        sessionLabel:selectedAttendanceSession.label,
+        date:selectedAttendanceSession.date,
+        day:selectedAttendanceSession.day,
+        start:selectedAttendanceSession.start,
+        end:selectedAttendanceSession.end,
+        venue:selectedAttendanceSession.venue,
+        remarks:selectedAttendanceSession.remarks,
+        updatedAt:record.updatedAt||""
+      };
+    });
+
+    renderAttendanceEditor();
+    status("attendanceStatus",`Loaded attendance for ${selectedAttendanceSession.label}.`);
+  }catch(e){
+    console.error(e);
+    status("attendanceStatus","Unable to load attendance. Check Firebase rules.");
+  }
+}
+
+function renderAttendanceEditor(){
+  const tbody=document.querySelector("#attendanceTable tbody");
+  const summary=document.getElementById("attendanceSummary");
+  if(!tbody)return;
+
+  const search=(document.getElementById("attendanceSearch")?.value||"").toLowerCase();
+  const filtered=loadedAttendanceRows.filter(r=>
+    r.name.toLowerCase().includes(search) ||
+    r.className.toLowerCase().includes(search) ||
+    r.group.toLowerCase().includes(search)
+  );
+
+  const present=loadedAttendanceRows.filter(r=>r.status==="Present").length;
+  const absent=loadedAttendanceRows.filter(r=>r.status==="Absent").length;
+  const mc=loadedAttendanceRows.filter(r=>r.status==="MC/Parent Letter").length;
+  const unmarked=loadedAttendanceRows.filter(r=>!["Present","Absent","MC/Parent Letter"].includes(r.status)).length;
+
+  summary.innerHTML=`
+    <span class="count-pill">Total: ${loadedAttendanceRows.length}</span>
+    <span class="count-pill">Present: ${present}</span>
+    <span class="count-pill">Absent: ${absent}</span>
+    <span class="count-pill">MC/PL: ${mc}</span>
+    <span class="count-pill">Unmarked: ${unmarked}</span>
+  `;
+
+  if(!filtered.length){
+    tbody.innerHTML='<tr><td colspan="6">No matching students.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML=filtered.map(r=>`
+    <tr>
+      <td>${esc(r.name)}</td>
+      <td>${esc(r.className)}</td>
+      <td>${esc(r.group)}</td>
+      <td>
+        <select class="attendance-status" id="status-${r.studentId}">
+          <option value="Unmarked" ${r.status==="Unmarked"?"selected":""}>Unmarked</option>
+          <option value="Present" ${r.status==="Present"?"selected":""}>Present</option>
+          <option value="Absent" ${r.status==="Absent"?"selected":""}>Absent</option>
+          <option value="MC/Parent Letter" ${r.status==="MC/Parent Letter"?"selected":""}>MC/PL</option>
+        </select>
+      </td>
+      <td><input class="reason-box" id="reason-${r.studentId}" value="${esc(r.reason)}" placeholder="Reason"></td>
+      <td><button class="primary" onclick="saveAttendanceRecord('${r.studentId}')">Save</button></td>
+    </tr>
+  `).join("");
+}
+
+async function saveAttendanceRecord(studentId){
+  if(!selectedAttendanceSession){
+    status("attendanceStatus","Load a session first.");
+    return;
+  }
+
+  const row=loadedAttendanceRows.find(r=>r.studentId===studentId);
+  if(!row){
+    status("attendanceStatus","Student record not found.");
+    return;
+  }
+
+  const newStatus=document.getElementById(`status-${studentId}`).value;
+  const newReason=document.getElementById(`reason-${studentId}`).value.trim();
+  const now=new Date().toISOString();
+
+  const attendancePayload={
+    studentId,
+    name:row.name,
+    className:row.className,
+    group:row.group,
+    gender:row.gender,
+    status:newStatus,
+    reason:newReason,
+    sessionId:selectedAttendanceSession.id,
+    sessionLabel:selectedAttendanceSession.label,
+    updatedAt:now,
+    timestamp:serverTimestamp()
+  };
+
+  const teacherPayload={
+    sessionId:selectedAttendanceSession.id,
+    sessionLabel:selectedAttendanceSession.label,
+    date:selectedAttendanceSession.date||"",
+    day:selectedAttendanceSession.day||"",
+    start:selectedAttendanceSession.start||"",
+    end:selectedAttendanceSession.end||"",
+    venue:selectedAttendanceSession.venue||"",
+    remarks:selectedAttendanceSession.remarks||"",
+    studentId,
+    name:row.name,
+    className:row.className,
+    group:row.group,
+    gender:row.gender,
+    status:newStatus,
+    reason:newReason,
+    updatedAt:now,
+    timestamp:serverTimestamp()
+  };
+
+  try{
+    await setDoc(doc(db,"attendance",selectedAttendanceSession.id,"records",studentId),attendancePayload,{merge:true});
+    await setDoc(doc(db,"teacherAttendanceRecords",`${selectedAttendanceSession.id}_${studentId}`),teacherPayload,{merge:true});
+    row.status=newStatus;
+    row.reason=newReason;
+    row.updatedAt=now;
+    renderAttendanceEditor();
+    status("attendanceStatus",`Saved ${row.name}.`);
+  }catch(e){
+    console.error(e);
+    status("attendanceStatus","Unable to save attendance. Check Firebase rules/admin login.");
+  }
+}
+
 
 
 let loadedAttendanceRows = [];
@@ -221,10 +527,11 @@ onAuthStateChanged(auth, user=>{
   document.getElementById("loginPanel").classList.toggle("hidden", !!user);
   document.getElementById("adminPanel").classList.toggle("hidden", !user);
   document.getElementById("listPanel").classList.toggle("hidden", !user);
-  if(user) loadAnnouncements(); else if(unsub){unsub();unsub=null}
+  document.getElementById("attendancePanel").classList.toggle("hidden", !user);
+  if(user){ loadAnnouncements(); loadAttendanceSetup(); } else if(unsub){unsub();unsub=null}
 });
 
-window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm; window.loadAttendanceAfterDate=loadAttendanceAfterDate; window.downloadAttendanceCsv=downloadAttendanceCsv;
+window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm; window.loadAttendanceAfterDate=loadAttendanceAfterDate; window.downloadAttendanceCsv=downloadAttendanceCsv; window.loadAttendanceSetup=loadAttendanceSetup; window.loadSelectedAttendance=loadSelectedAttendance; window.renderAttendanceEditor=renderAttendanceEditor; window.saveAttendanceRecord=saveAttendanceRecord;
 </script>
 </body>
 </html>
