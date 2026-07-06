@@ -22,6 +22,13 @@ button,a{display:inline-block;margin:10px 8px 0 0;padding:11px 14px;border-radiu
 .item{padding:12px;margin:10px 0;border:1px solid #25324a;border-radius:16px;background:#0b1526}
 .date{color:#b9c8dc;font-size:12px;font-weight:800;margin-bottom:5px}
 .status{color:#b9c8dc;margin-top:8px}
+
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid #25324a;padding:8px;text-align:left;white-space:nowrap}
+th{color:#b9c8dc;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.count-pill{display:inline-block;margin:6px 8px 0 0;padding:6px 10px;border-radius:999px;background:#0b1526;border:1px solid #25324a;color:#dbeafe;font-weight:800;font-size:12px}
+
 </style>
 </head>
 <body>
@@ -29,6 +36,7 @@ button,a{display:inline-block;margin:10px 8px 0 0;padding:11px 14px;border-radiu
 
 <section id="loginPanel" class="panel">
 <h2>Admin Login</h2>
+
 <label>Email</label><input id="email" type="email">
 <label>Password</label><input id="password" type="password">
 <button class="primary" onclick="login()">Login</button><a href="index.html">Back to Schedule</a>
@@ -53,7 +61,7 @@ button,a{display:inline-block;margin:10px 8px 0 0;padding:11px 14px;border-radiu
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 const firebaseConfig = {
@@ -73,22 +81,11 @@ function esc(t){return String(t??"").replaceAll("&","&amp;").replaceAll("<","&lt
 function status(id,msg){document.getElementById(id).textContent=msg||""}
 
 async function login(){
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  if(!email || !password){
-    status("loginStatus","Please enter both email and password.");
-    return;
-  }
-
   try{
     status("loginStatus","Logging in...");
-    await signInWithEmailAndPassword(auth, email, password);
-    status("loginStatus","Login successful.");
-  }catch(e){
-    console.error(e);
-    status("loginStatus", `${e.code || "auth/error"}: ${e.message || "Login failed."}`);
-  }
+    await signInWithEmailAndPassword(auth, document.getElementById("email").value.trim(), document.getElementById("password").value);
+    status("loginStatus","");
+  }catch(e){console.error(e);status("loginStatus","Login failed. Check email/password.")}
 }
 async function logout(){await signOut(auth)}
 
@@ -118,46 +115,105 @@ async function deleteAnnouncement(id){
 function clearAnnouncementForm(){document.getElementById("announcementDate").value="";document.getElementById("announcementText").value=""}
 
 
-async function adminUpdateAttendance(recordId, status){
-  const record = loadedAttendanceRows.find(r => r.id === recordId);
-  if(!record){
-    alert("Record not found.");
+let loadedAttendanceRows = [];
+
+function normaliseDateValue(dateText){
+  if(!dateText) return "";
+  const monthMap={jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12"};
+  const clean=String(dateText).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+  const parts=clean.split("-");
+  if(parts.length>=2){
+    const day=String(Number(parts[0])).padStart(2,"0");
+    const month=monthMap[String(parts[1]).slice(0,3).toLowerCase()];
+    if(month) return `2026-${month}-${day}`;
+  }
+  const parsed=new Date(clean);
+  if(!isNaN(parsed.getTime())){
+    return `${parsed.getFullYear()}-${String(parsed.getMonth()+1).padStart(2,"0")}-${String(parsed.getDate()).padStart(2,"0")}`;
+  }
+  return "";
+}
+
+async function loadAttendanceAfterDate(){
+  const fromDate=document.getElementById("attendanceFromDate").value;
+  const tbody=document.querySelector("#attendanceTable tbody");
+  const summary=document.getElementById("attendanceSummary");
+  loadedAttendanceRows=[];
+  summary.innerHTML="";
+  if(!fromDate){
+    document.getElementById("attendanceStatus").textContent="Choose a date first.";
     return;
   }
-  const reason = prompt("Reason for absence / note:", record.reason || "") ?? record.reason || "";
-  try{
-    await setDoc(doc(db,"teacherAttendanceRecords",recordId), {
-      ...record,
-      status,
-      reason,
-      updatedAt:new Date().toISOString(),
-      timestamp:serverTimestamp()
-    }, {merge:true});
 
-    if(record.sessionId && record.studentId){
-      await setDoc(doc(db,"attendance",record.sessionId, "records", record.studentId), {
-        studentId:record.studentId,
-        name:record.name || "",
-        className:record.className || "",
-        group:record.group || "",
-        gender:record.gender || "",
-        status,
-        reason,
-        sessionId:record.sessionId,
-        sessionLabel:record.sessionLabel || "",
-        sessionDate:record.sessionDate || "",
-        editableUntil:record.editableUntil || "",
-        updatedAt:new Date().toISOString(),
-        timestamp:serverTimestamp()
-      }, {merge:true});
+  try{
+    document.getElementById("attendanceStatus").textContent="Loading attendance...";
+    tbody.innerHTML='<tr><td colspan="8">Loading...</td></tr>';
+
+    const snap=await getDocs(query(collection(db,"teacherAttendanceRecords"), orderBy("updatedAt","desc")));
+    loadedAttendanceRows=snap.docs
+      .map(d=>({id:d.id,...d.data()}))
+      .map(r=>({...r, normalisedDate: normaliseDateValue(r.date)}))
+      .filter(r=>r.normalisedDate && r.normalisedDate>=fromDate)
+      .sort((a,b)=>(a.normalisedDate||"").localeCompare(b.normalisedDate||"") || (a.sessionLabel||"").localeCompare(b.sessionLabel||"") || (a.name||"").localeCompare(b.name||""));
+
+    if(!loadedAttendanceRows.length){
+      tbody.innerHTML='<tr><td colspan="8">No attendance records found from this date.</td></tr>';
+      document.getElementById("attendanceStatus").textContent="No records found.";
+      return;
     }
 
-    alert("Attendance updated.");
-    if(typeof loadAttendanceAfterDate === "function") loadAttendanceAfterDate();
+    const present=loadedAttendanceRows.filter(r=>r.status==="Present").length;
+    const absent=loadedAttendanceRows.filter(r=>r.status==="Absent").length;
+    const mc=loadedAttendanceRows.filter(r=>r.status==="MC/Parent Letter").length;
+
+    summary.innerHTML=`
+      <span class="count-pill">Total: ${loadedAttendanceRows.length}</span>
+      <span class="count-pill">Present: ${present}</span>
+      <span class="count-pill">Absent: ${absent}</span>
+      <span class="count-pill">MC/PL: ${mc}</span>
+    `;
+
+    tbody.innerHTML=loadedAttendanceRows.map(r=>`
+      <tr>
+        <td>${esc(r.date||"")}</td>
+        <td>${esc(r.sessionLabel||"")}</td>
+        <td>${esc(r.name||"")}</td>
+        <td>${esc(r.className||"")}</td>
+        <td>${esc(r.group||"")}</td>
+        <td>${esc(r.status||"")}</td>
+        <td>${esc(r.reason||"")}</td>
+        <td>${esc(r.updatedAt||"")}</td>
+      </tr>
+    `).join("");
+
+    document.getElementById("attendanceStatus").textContent=`Loaded ${loadedAttendanceRows.length} records.`;
   }catch(e){
     console.error(e);
-    alert("Unable to update attendance. Check admin login/rules.");
+    tbody.innerHTML='<tr><td colspan="8">Unable to load attendance. Check Firebase login/rules.</td></tr>';
+    document.getElementById("attendanceStatus").textContent="Unable to load attendance.";
   }
+}
+
+function downloadAttendanceCsv(){
+  if(!loadedAttendanceRows.length){
+    document.getElementById("attendanceStatus").textContent="Load attendance first.";
+    return;
+  }
+
+  const rows=[["Date","Session","Name","Class","Group","Status","Reason","Updated At"]];
+  loadedAttendanceRows.forEach(r=>rows.push([
+    r.date||"",r.sessionLabel||"",r.name||"",r.className||"",r.group||"",r.status||"",r.reason||"",r.updatedAt||""
+  ]));
+
+  const csv=rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`attendance_from_${document.getElementById("attendanceFromDate").value||"selected_date"}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 
@@ -165,10 +221,10 @@ onAuthStateChanged(auth, user=>{
   document.getElementById("loginPanel").classList.toggle("hidden", !!user);
   document.getElementById("adminPanel").classList.toggle("hidden", !user);
   document.getElementById("listPanel").classList.toggle("hidden", !user);
-  if(user){ status("adminStatus", `Logged in as ${user.email}`); loadAnnouncements(); } else if(unsub){unsub();unsub=null}
+  if(user) loadAnnouncements(); else if(unsub){unsub();unsub=null}
 });
 
-window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm;
+window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm; window.loadAttendanceAfterDate=loadAttendanceAfterDate; window.downloadAttendanceCsv=downloadAttendanceCsv;
 </script>
 </body>
 </html>
