@@ -29,7 +29,6 @@ button,a{display:inline-block;margin:10px 8px 0 0;padding:11px 14px;border-radiu
 
 <section id="loginPanel" class="panel">
 <h2>Admin Login</h2>
-<p>Public users do not need to log in. Only admin logs in to manage announcements.</p>
 <label>Email</label><input id="email" type="email">
 <label>Password</label><input id="password" type="password">
 <button class="primary" onclick="login()">Login</button><a href="index.html">Back to Schedule</a>
@@ -74,11 +73,22 @@ function esc(t){return String(t??"").replaceAll("&","&amp;").replaceAll("<","&lt
 function status(id,msg){document.getElementById(id).textContent=msg||""}
 
 async function login(){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || !password){
+    status("loginStatus","Please enter both email and password.");
+    return;
+  }
+
   try{
     status("loginStatus","Logging in...");
-    await signInWithEmailAndPassword(auth, document.getElementById("email").value.trim(), document.getElementById("password").value);
-    status("loginStatus","");
-  }catch(e){console.error(e);status("loginStatus","Login failed. Check email/password.")}
+    await signInWithEmailAndPassword(auth, email, password);
+    status("loginStatus","Login successful.");
+  }catch(e){
+    console.error(e);
+    status("loginStatus", `${e.code || "auth/error"}: ${e.message || "Login failed."}`);
+  }
 }
 async function logout(){await signOut(auth)}
 
@@ -155,7 +165,7 @@ onAuthStateChanged(auth, user=>{
   document.getElementById("loginPanel").classList.toggle("hidden", !!user);
   document.getElementById("adminPanel").classList.toggle("hidden", !user);
   document.getElementById("listPanel").classList.toggle("hidden", !user);
-  if(user) loadAnnouncements(); else if(unsub){unsub();unsub=null}
+  if(user){ status("adminStatus", `Logged in as ${user.email}`); loadAnnouncements(); } else if(unsub){unsub();unsub=null}
 });
 
 window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm;
