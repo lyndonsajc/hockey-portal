@@ -286,17 +286,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(45,212,191,.65);box-sh
 
 <main class="container">
 
-  <section class="announcement-box">
-    <div class="announcement-head">
-      <span>📢 Announcement</span>
-      <button class="btn secondary" onclick="loadAnnouncements()">Refresh</button>
-    </div>
-    <div id="announcementList" class="announcement-list">
-      <div class="loading">Loading announcements...</div>
-    </div>
-  </section>
-
-  <section class="toolbar">
+<section class="toolbar">
     <label for="searchInput">Search</label>
     <input id="searchInput" type="text" placeholder="Search date, venue, remarks..." />
   </section>
@@ -311,21 +301,6 @@ input:focus,textarea:focus,select:focus{border-color:rgba(45,212,191,.65);box-sh
 </main>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBTKW9nlCQK-1ktvEu8at4-KRLjIwbz660",
-  authDomain: "saintshockeyattendance.firebaseapp.com",
-  projectId: "saintshockeyattendance",
-  storageBucket: "saintshockeyattendance.firebasestorage.app",
-  messagingSenderId: "717790587080",
-  appId: "1:717790587080:web:cd9e1a07d580566f3f1dfd"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1-r7uyrReT36YhEF6xzx5YpnFG6Z-ycPp3XzfAaWUSP8/export?format=csv&gid=0";
 let schedule = [];
 
@@ -448,44 +423,10 @@ function renderSchedule(){
   `).join("");
 }
 
-function loadAnnouncements(){
-  const announcementList = document.getElementById("announcementList");
-  announcementList.innerHTML = '<div class="loading">Loading announcements...</div>';
-
-  const q = query(collection(db,"announcements"), orderBy("createdAt","desc"));
-
-  onSnapshot(q, snapshot => {
-    if(snapshot.empty){
-      announcementList.innerHTML = `
-        <div class="announcement-item">
-          <div class="announcement-date">No announcement</div>
-          <div>No announcements have been added yet.</div>
-        </div>
-      `;
-      return;
-    }
-
-    announcementList.innerHTML = snapshot.docs.map(docSnap => {
-      const item = docSnap.data();
-      return `
-        <div class="announcement-item">
-          <div class="announcement-date">${escapeHtml(item.date || "Announcement")}</div>
-          <div>${escapeHtml(item.text || "")}</div>
-        </div>
-      `;
-    }).join("");
-  }, err => {
-    console.error(err);
-    announcementList.innerHTML = '<div class="error">Unable to load announcements.</div>';
-  });
-}
-
 document.getElementById("searchInput").addEventListener("input",renderSchedule);
 
 window.loadSchedule=loadSchedule;
-window.loadAnnouncements=loadAnnouncements;
 
-loadAnnouncements();
 loadSchedule();
 </script>
 </body>
