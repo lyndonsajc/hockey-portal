@@ -281,7 +281,8 @@ input:focus,textarea:focus,select:focus{border-color:rgba(45,212,191,.65);box-sh
 .overview-grid .card{height:auto}.overview-note{font-size:12px;color:#667085;text-align:center;margin:20px 0}
 .attendance-counts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px}
 .attendance-count{background:#f2f4f9;border-radius:12px;padding:14px}.attendance-count strong{display:block;font-size:26px;color:#080d55}.attendance-count span{font-size:13px;color:#475467}
-.announcement-item{white-space:pre-wrap}
+.announcement-item{white-space:normal}
+.announcement-body{white-space:pre-line;overflow-wrap:anywhere}
 @media(max-width:700px){.overview-grid{grid-template-columns:1fr}}
 </style><style id="saints-shared-header">
 /* Shared Saints Hockey header, based on the Schedule page. */
@@ -299,6 +300,13 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
 .announcement-item:last-child{margin-bottom:0;}
 .announcement-date{font-size:11px;margin:0 0 3px;}
 @media(max-width:760px){.announcement-box{padding:10px 12px;}.announcement-list{min-height:0;}.announcement-item{padding:8px 10px;}}
+</style>
+<style id="announcement-whitespace-fix">
+.announcement-box .announcement-list{height:auto;min-height:0;max-height:none;}
+.announcement-box .announcement-item{display:block;height:auto;min-height:0;padding:8px 10px;margin:0 0 6px;white-space:normal;line-height:1.45;}
+.announcement-box .announcement-item:last-child{margin-bottom:0;}
+.announcement-box .announcement-date{display:block;padding:0;margin:0 0 4px;line-height:1.35;white-space:normal;}
+.announcement-box .announcement-body{display:block;padding:0;margin:0;white-space:pre-line;line-height:1.45;overflow-wrap:anywhere;}
 </style>
 </head>
 <body>
@@ -473,23 +481,13 @@ function loadAnnouncements(){
 
   announcementUnsubscribe=onSnapshot(q, snapshot => {
     if(snapshot.empty){
-      announcementList.innerHTML = `
-        <div class="announcement-item">
-          <div class="announcement-date">No announcement</div>
-          <div>No announcements have been added yet.</div>
-        </div>
-      `;
+      announcementList.innerHTML = '<div class="announcement-item"><div class="announcement-date">No announcement</div><div class="announcement-body">No announcements have been added yet.</div></div>';
       return;
     }
 
     announcementList.innerHTML = snapshot.docs.map(docSnap => {
       const item = docSnap.data();
-      return `
-        <div class="announcement-item">
-          <div class="announcement-date">${escapeHtml(item.date || "Announcement")}</div>
-          <div>${escapeHtml(item.text || "")}</div>
-        </div>
-      `;
+      return `<div class="announcement-item"><div class="announcement-date">${escapeHtml(String(item.date || "Announcement").trim())}</div><div class="announcement-body">${escapeHtml(String(item.text || "").trim())}</div></div>`;
     }).join("");
   }, err => {
     console.error(err);
