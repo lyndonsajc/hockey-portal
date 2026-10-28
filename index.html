@@ -302,7 +302,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(45,212,191,.65);box-sh
   </section>
 
   <div class="quick-actions">
-    <a class="btn" href="attendance.html">Take Attendance</a>
+    <a class="btn" href="https://sites.google.com/moe.edu.sg/saintshockey/attendance">Take Attendance</a>
     <button class="btn secondary" onclick="loadSchedule()">Refresh</button>
     <button class="btn secondary" onclick="window.print()">Print</button>
   </div>
@@ -441,7 +441,7 @@ function renderSchedule(){
           <div class="info"><span>Coach</span><span>${escapeHtml(item.coach||"TBC")}</span></div>
           <div class="info"><span>TIC</span><span>${escapeHtml(item.tic||"TBC")}</span></div>
           <div class="info"><span>Standby</span><span>${escapeHtml(item.standby||"-")}</span></div>
-          <div class="card-actions"><a class="small-btn" href="${makeMapLink(item)}" target="_blank">Map</a><a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">Add</a><a class="small-btn" href="${item.attendanceLink || `attendance.html?session=${encodeURIComponent(item.id)}`}">Attendance</a></div>
+          <div class="card-actions"><a class="small-btn" href="${makeMapLink(item)}" target="_blank">Map</a><a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">Add</a><a class="small-btn" href="https://sites.google.com/moe.edu.sg/saintshockey/attendance">Attendance</a></div>
         </article>
       `).join("")}
     </div>
