@@ -502,7 +502,6 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
     </div>
   </section>
 <div class="footer-actions">
-    <button class="main-btn primary" onclick="downloadCsv()">Download CSV</button>
     <a class="main-btn" href="https://sites.google.com/moe.edu.sg/saintshockey/schedule" target="_top">← Back to Schedule</a>
   </div>
 
@@ -738,14 +737,6 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
   }
 
 
-  function downloadCsv(){
-    const session=selectedSession();
-    const rows=[["Session","Name","Class","Group","Status","Reason","Updated At"]];
-    students.forEach(student=>{const record=attendance[student.id]||{};rows.push([session?.label||"",student.name,student.className,student.group,record.status||"Unmarked",record.reason||"",record.updatedAt||""]);});
-    const csv=rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
-    const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`attendance_${session?.id||"session"}.csv`;a.click();URL.revokeObjectURL(url);
-  }
-
   async function loadAll(){
     document.getElementById("studentContainer").innerHTML='<div class="loading">Loading students...</div>';
     try{await loadSchedule();await loadStudents();startAttendanceListener();renderStudents();}catch(err){console.error(err);document.getElementById("studentContainer").innerHTML='<div class="error">Unable to refresh attendance data. Check Google Sheet sharing/publishing.</div>';}
@@ -754,7 +745,6 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
   window.markAttendance=markAttendance;
   window.saveReason=saveReason;
   window.loadAll=loadAll;
-  window.downloadCsv=downloadCsv;
   document.getElementById("sessionSelect").addEventListener("change",()=>{startAttendanceListener();setTimeout(updateSummary,300);});
   loadAll();
 </script>

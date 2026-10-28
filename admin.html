@@ -59,6 +59,9 @@ header.saints-header h1{margin:0;font-family:inherit;font-size:24px;line-height:
 header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-size:11px;line-height:1.5;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#94a9c3;}
 @media(max-width:760px){header.saints-header{width:100%;margin-top:14px;padding:12px;gap:10px;flex-wrap:wrap;}header.saints-header .saints-crest{width:38px;height:38px;min-width:38px;}header.saints-header h1{font-size:22px;flex:1;}header.saints-header .saints-tagline{flex-basis:100%;margin:0;padding-left:48px;font-size:10px;letter-spacing:.10em;}}
 </style>
+<style id="teacher-export-styles">
+.export-note{color:#b9c8dc;font-size:13px;line-height:1.6;}.export-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}.export-session-list{max-height:330px;overflow-y:auto;border:1px solid #25324a;border-radius:14px;margin-top:12px;padding:6px;background:#070e1c;}.export-session{display:flex;align-items:flex-start;gap:10px;margin:0;padding:12px;border-bottom:1px solid #25324a;font-size:13px;cursor:pointer;}.export-session:last-child{border-bottom:0;}.export-session input{width:18px;height:18px;flex:0 0 18px;margin:1px 0 0;accent-color:#2dd4bf;}.export-session small{display:block;font-weight:400;color:#94a9c3;margin-top:4px;}button:disabled{opacity:.45;cursor:default;}#exportSelectionCount{font-size:12px;color:#b9c8dc;margin-top:10px;}
+</style>
 </head>
 <body>
 <header class="saints-header">
@@ -110,7 +113,7 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
 </div>
 
 <button class="primary" onclick="loadSelectedAttendance()">Load Attendance</button>
-<button onclick="downloadAttendanceCsv()">Download CSV</button>
+
 
 <div id="attendanceStatus" class="status"></div>
 <div id="attendanceSummary"></div>
@@ -135,10 +138,32 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
 </section>
 
 
+<section id="exportPanel" class="panel hidden">
+<h2>Download Attendance CSV</h2>
+<p class="export-note">Select one or more previous sessions, then download them together in one CSV file. Sessions dated today or earlier are shown, including saved sessions no longer in the schedule.</p>
+<label for="exportSessionSearch">Find a session</label><input id="exportSessionSearch" placeholder="Search date, venue or session">
+<div class="export-actions"><button id="selectVisibleSessions">Select all shown</button><button id="clearExportSessions">Clear selection</button><button id="refreshExportSessions">Refresh sessions</button><span id="exportSelectionCount">0 selected</span></div>
+<div id="exportSessionList" class="export-session-list">Sign in to load sessions.</div>
+<button id="downloadSessionsButton" class="primary" disabled>Download selected sessions CSV</button>
+<div id="exportStatus" class="status" role="status"></div>
+<p class="export-note">Exports contain saved attendance records. Students who were never marked are not inferred from the current roster, which may differ from the historical team. Only saved edits are included.</p>
+</section>
+
+<section id="passwordPanel" class="panel hidden">
+<details><summary style="cursor:pointer;font-weight:800">Change teacher Admin password</summary>
+<p class="export-note">This changes the teacher account password used for Admin sign-in. Share the new password with authorised teachers only.</p>
+<form id="teacherPasswordForm">
+<label for="currentAdminPassword">Current Admin password</label><input id="currentAdminPassword" type="password" autocomplete="current-password" required>
+<label for="newAdminPassword">New Admin password</label><input id="newAdminPassword" type="password" autocomplete="new-password" minlength="16" required>
+<label for="confirmAdminPassword">Confirm new Admin password</label><input id="confirmAdminPassword" type="password" autocomplete="new-password" minlength="16" required>
+<button id="changePasswordButton" type="submit" class="primary">Update teacher password</button>
+<div id="passwordStatus" class="status" role="status"></div>
+</form></details></section>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, onSnapshot, serverTimestamp, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, onSnapshot, serverTimestamp, getDocs, getDocsFromServer, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBTKW9nlCQK-1ktvEu8at4-KRLjIwbz660",
@@ -435,115 +460,113 @@ async function saveAttendanceRecord(studentId){
 
 let loadedAttendanceRows = [];
 
-function normaliseDateValue(dateText){
-  if(!dateText) return "";
-  const monthMap={jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12"};
-  const clean=String(dateText).trim();
-  if(/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
-  const parts=clean.split("-");
-  if(parts.length>=2){
-    const day=String(Number(parts[0])).padStart(2,"0");
-    const month=monthMap[String(parts[1]).slice(0,3).toLowerCase()];
-    if(month) return `2026-${month}-${day}`;
-  }
-  const parsed=new Date(clean);
-  if(!isNaN(parsed.getTime())){
-    return `${parsed.getFullYear()}-${String(parsed.getMonth()+1).padStart(2,"0")}-${String(parsed.getDate()).padStart(2,"0")}`;
-  }
-  return "";
+const ADMIN_EMAIL='chua_chun_lin_lyndon@moe.edu.sg';
+let pastExportSessions=[],selectedExportSessions=new Set(),exportBusy=false;
+function teacherSignedIn(){return auth.currentUser?.email===ADMIN_EMAIL;}
+function singaporeToday(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const value=key=>parts.find(p=>p.type===key).value;return `${value('year')}-${value('month')}-${value('day')}`;}
+function normaliseDateValue(value){
+  if(!value)return '';
+  const text=String(value).trim();if(/^\d{4}-\d{2}-\d{2}$/.test(text))return text;
+  const months={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+  const m=text.match(/^(\d{1,2})[- /]([a-z]{3,9})(?:[- /](\d{2}|\d{4}))?$/i);
+  if(m&&months[m[2].slice(0,3).toLowerCase()]){const year=m[3]?(m[3].length===2?'20'+m[3]:m[3]):'2026';return `${year}-${months[m[2].slice(0,3).toLowerCase()]}-${m[1].padStart(2,'0')}`;}
+  return '';
 }
-
-async function loadAttendanceAfterDate(){
-  const fromDate=document.getElementById("attendanceFromDate").value;
-  const tbody=document.querySelector("#attendanceTable tbody");
-  const summary=document.getElementById("attendanceSummary");
-  loadedAttendanceRows=[];
-  summary.innerHTML="";
-  if(!fromDate){
-    document.getElementById("attendanceStatus").textContent="Choose a date first.";
-    return;
-  }
-
+function sessionMetadata(id,data){return {...data,id,normalisedDate:normaliseDateValue(data.sessionDate||data.date),label:data.sessionLabel||data.label||`${data.date||data.sessionDate||''} ${data.day||''} ${data.start||''}-${data.end||''} ${data.venue||''} (${data.remarks||'Training'})`};}
+function combineExportSessions(schedule,saved,teacher,today=singaporeToday()){
+  const map=new Map();
+  for(const s of schedule)map.set(s.id,sessionMetadata(s.id,s));
+  for(const s of saved)map.set(s.id,sessionMetadata(s.id,{...map.get(s.id),...s}));
+  for(const r of teacher){if(!r.sessionId)continue;if(!map.has(r.sessionId))map.set(r.sessionId,sessionMetadata(r.sessionId,r));}
+  return [...map.values()].filter(s=>s.normalisedDate&&s.normalisedDate<=today).sort((a,b)=>b.normalisedDate.localeCompare(a.normalisedDate)||String(b.start||'').localeCompare(String(a.start||''))||a.id.localeCompare(b.id));
+}
+function filteredExportSessions(){const q=document.getElementById('exportSessionSearch').value.trim().toLowerCase();return pastExportSessions.filter(s=>(s.label+' '+s.normalisedDate).toLowerCase().includes(q));}
+function renderExportSessions(){
+  const visible=filteredExportSessions(),list=document.getElementById('exportSessionList');
+  list.innerHTML=visible.length?visible.map(s=>`<label class="export-session"><input type="checkbox" value="${esc(s.id)}" ${selectedExportSessions.has(s.id)?'checked':''} ${exportBusy?'disabled':''}><span>${esc(s.label)}<small>${esc(s.normalisedDate)}</small></span></label>`).join(''):'<p class="export-note">No matching past sessions.</p>';
+  document.getElementById('exportSelectionCount').textContent=`${selectedExportSessions.size} selected`;
+  document.getElementById('downloadSessionsButton').disabled=exportBusy||!selectedExportSessions.size||!teacherSignedIn();
+}
+async function loadPastExportSessions(){
+  if(!teacherSignedIn())return;const uid=auth.currentUser.uid;
+  status('exportStatus','Loading current and archived sessions…');
+  document.getElementById('exportSessionList').textContent='Loading…';
   try{
-    document.getElementById("attendanceStatus").textContent="Loading attendance...";
-    tbody.innerHTML='<tr><td colspan="8">Loading...</td></tr>';
-
-    const snap=await getDocs(query(collection(db,"teacherAttendanceRecords"), orderBy("updatedAt","desc")));
-    loadedAttendanceRows=snap.docs
-      .map(d=>({id:d.id,...d.data()}))
-      .map(r=>({...r, normalisedDate: normaliseDateValue(r.date)}))
-      .filter(r=>r.normalisedDate && r.normalisedDate>=fromDate)
-      .sort((a,b)=>(a.normalisedDate||"").localeCompare(b.normalisedDate||"") || (a.sessionLabel||"").localeCompare(b.sessionLabel||"") || (a.name||"").localeCompare(b.name||""));
-
-    if(!loadedAttendanceRows.length){
-      tbody.innerHTML='<tr><td colspan="8">No attendance records found from this date.</td></tr>';
-      document.getElementById("attendanceStatus").textContent="No records found.";
-      return;
+    const [saved,teacher,sheet]=await Promise.all([getDocsFromServer(collection(db,'attendanceSessions')),getDocsFromServer(collection(db,'teacherAttendanceRecords')),fetchCsv(SCHEDULE_CSV_URL).then(text=>rowsToScheduleObjects(csvToRows(text))).catch(()=>null)]);
+    if(auth.currentUser?.uid!==uid||!teacherSignedIn())return;
+    pastExportSessions=combineExportSessions(sheet||[],saved.docs.map(d=>({id:d.id,...d.data()})),teacher.docs.map(d=>({id:d.id,...d.data()})));
+    selectedExportSessions=new Set([...selectedExportSessions].filter(id=>pastExportSessions.some(s=>s.id===id)));renderExportSessions();
+    status('exportStatus',`${pastExportSessions.length} sessions dated today or earlier.${sheet?'':' Current schedule unavailable; saved archives are shown.'}`);
+  }catch(error){console.error(error);pastExportSessions=[];selectedExportSessions.clear();renderExportSessions();status('exportStatus','Unable to load sessions. Check your teacher login and connection, then refresh sessions.');}
+}
+function csvCell(value){let text=String(value??'');if(/^[\s]*[=+@-]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';}
+function buildExportCsv(rows){
+  const columns=[['Date','date'],['Session ID','sessionId'],['Session','sessionLabel'],['Day','day'],['Start','start'],['End','end'],['Venue','venue'],['Remarks','remarks'],['Student ID','studentId'],['Name','name'],['Class','className'],['Group','group'],['Gender','gender'],['Status','status'],['Reason','reason'],['Updated At','updatedAt']];
+  return '\uFEFF'+[columns.map(([label])=>label),...rows.map(r=>columns.map(([,field])=>r[field]??''))].map(row=>row.map(csvCell).join(',')).join('\r\n');
+}
+function mergeSessionRecords(session,teacher,records){
+  const map=new Map();for(const record of teacher.filter(r=>r.sessionId===session.id)){const key=String(record.studentId||record.id);map.set(key,{...record,studentId:record.studentId||record.id});}
+  for(const record of records){const key=String(record.studentId||record.id);map.set(key,{...map.get(key),...record,studentId:key});}
+  return [...map.values()].map(r=>({date:session.normalisedDate,sessionId:session.id,sessionLabel:session.label,day:session.day||'',start:session.start||'',end:session.end||'',venue:session.venue||'',remarks:session.remarks||'',...r,date:session.normalisedDate,sessionId:session.id,sessionLabel:session.label,status:r.status||'Unmarked'})).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))||String(a.studentId).localeCompare(String(b.studentId)));
+}
+async function downloadSelectedSessionsCsv(){
+  if(!teacherSignedIn()||exportBusy)return;
+  const uid=auth.currentUser.uid;const chosen=pastExportSessions.filter(s=>selectedExportSessions.has(s.id));if(!chosen.length){status('exportStatus','Select at least one session.');return;}
+  exportBusy=true;renderExportSessions();status('exportStatus','Preparing selected sessions…');
+  try{
+    const teacherSnap=await getDocsFromServer(collection(db,'teacherAttendanceRecords'));const teacher=teacherSnap.docs.map(d=>({id:d.id,...d.data()}));const rows=[];let empty=0;
+    for(const session of [...chosen].reverse()){
+      if(auth.currentUser?.uid!==uid||!teacherSignedIn())throw new Error('Signed out during export');
+      const snap=await getDocsFromServer(collection(db,'attendance',session.id,'records'));const sessionRows=mergeSessionRecords(session,teacher,snap.docs.map(d=>({id:d.id,...d.data()})));if(!sessionRows.length)empty++;rows.push(...sessionRows);
     }
-
-    const present=loadedAttendanceRows.filter(r=>r.status==="Present").length;
-    const absent=loadedAttendanceRows.filter(r=>r.status==="Absent").length;
-    const mc=loadedAttendanceRows.filter(r=>r.status==="MC/Parent Letter").length;
-
-    summary.innerHTML=`
-      <span class="count-pill">Total: ${loadedAttendanceRows.length}</span>
-      <span class="count-pill">Present: ${present}</span>
-      <span class="count-pill">Absent: ${absent}</span>
-      <span class="count-pill">MC/PL: ${mc}</span>
-    `;
-
-    tbody.innerHTML=loadedAttendanceRows.map(r=>`
-      <tr>
-        <td>${esc(r.date||"")}</td>
-        <td>${esc(r.sessionLabel||"")}</td>
-        <td>${esc(r.name||"")}</td>
-        <td>${esc(r.className||"")}</td>
-        <td>${esc(r.group||"")}</td>
-        <td>${esc(r.status||"")}</td>
-        <td>${esc(r.reason||"")}</td>
-        <td>${esc(r.updatedAt||"")}</td>
-      </tr>
-    `).join("");
-
-    document.getElementById("attendanceStatus").textContent=`Loaded ${loadedAttendanceRows.length} records.`;
-  }catch(e){
-    console.error(e);
-    tbody.innerHTML='<tr><td colspan="8">Unable to load attendance. Check Firebase login/rules.</td></tr>';
-    document.getElementById("attendanceStatus").textContent="Unable to load attendance.";
-  }
+    if(auth.currentUser?.uid!==uid||!teacherSignedIn())return;
+    if(!rows.length){status('exportStatus','No saved attendance records exist for the selected sessions.');return;}
+    const blob=new Blob([buildExportCsv(rows)],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`saints_hockey_attendance_${chosen.length}_sessions_${singaporeToday()}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    status('exportStatus',`Downloaded ${rows.length} saved records from ${chosen.length-empty} sessions.${empty?' '+empty+' selected sessions had no saved records.':''}`);
+  }catch(error){console.error(error);status('exportStatus','Download failed. No partial file was downloaded. Check your teacher login and connection, then try again.');}
+  finally{exportBusy=false;renderExportSessions();}
 }
+document.getElementById('exportSessionSearch').addEventListener('input',renderExportSessions);
+document.getElementById('exportSessionList').addEventListener('change',event=>{if(event.target.type!=='checkbox'||exportBusy)return;if(event.target.checked)selectedExportSessions.add(event.target.value);else selectedExportSessions.delete(event.target.value);renderExportSessions();});
+document.getElementById('selectVisibleSessions').addEventListener('click',()=>{if(exportBusy)return;filteredExportSessions().forEach(s=>selectedExportSessions.add(s.id));renderExportSessions();});
+document.getElementById('clearExportSessions').addEventListener('click',()=>{if(exportBusy)return;selectedExportSessions.clear();renderExportSessions();});
+document.getElementById('refreshExportSessions').addEventListener('click',()=>{if(!exportBusy)loadPastExportSessions();});
+document.getElementById('downloadSessionsButton').addEventListener('click',downloadSelectedSessionsCsv);
 
-function downloadAttendanceCsv(){
-  if(!loadedAttendanceRows.length){
-    document.getElementById("attendanceStatus").textContent="Load attendance first.";
-    return;
-  }
 
-  const rows=[["Date","Session","Name","Class","Group","Status","Reason","Updated At"]];
-  loadedAttendanceRows.forEach(r=>rows.push([
-    r.date||"",r.sessionLabel||"",r.name||"",r.className||"",r.group||"",r.status||"",r.reason||"",r.updatedAt||""
-  ]));
-
-  const csv=rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
-  const blob=new Blob([csv],{type:"text/csv"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download=`attendance_from_${document.getElementById("attendanceFromDate").value||"selected_date"}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+async function changeTeacherPassword(event){
+  event.preventDefault();
+  if(!teacherSignedIn()){status('passwordStatus','Sign in with the teacher Admin account first.');return;}
+  const current=document.getElementById('currentAdminPassword').value;
+  const next=document.getElementById('newAdminPassword').value;
+  const confirmation=document.getElementById('confirmAdminPassword').value;
+  if(next.length<16){status('passwordStatus','Use at least 16 characters for the new password.');return;}
+  if(next!==confirmation){status('passwordStatus','The new passwords do not match.');return;}
+  if(next===current){status('passwordStatus','Choose a password different from the current one.');return;}
+  const button=document.getElementById('changePasswordButton');button.disabled=true;
+  status('passwordStatus','Updating teacher password…');
+  const user=auth.currentUser;
+  try{
+    await reauthenticateWithCredential(user,EmailAuthProvider.credential(user.email,current));
+    if(auth.currentUser?.uid!==user.uid||!teacherSignedIn())throw new Error('Account changed during password update');
+    await updatePassword(user,next);
+    document.getElementById('teacherPasswordForm').reset();
+    status('passwordStatus','Teacher Admin password updated. Use the new password for your next sign-in.');
+  }catch(error){console.error(error);const text=error.code==='auth/weak-password'||error.code==='auth/password-does-not-meet-requirements'?'The new password does not meet the account password policy. Choose a stronger password.':error.code==='auth/network-request-failed'?'Connection failed. Password change was not confirmed. Try again when connected.':'Password change failed. Check the current password, or sign out and sign in again before retrying.';status('passwordStatus',text);}
+  finally{document.getElementById('currentAdminPassword').value='';button.disabled=false;}
 }
+document.getElementById('teacherPasswordForm').addEventListener('submit',changeTeacherPassword);
 
 
 onAuthStateChanged(auth, user=>{
-  document.getElementById("loginPanel").classList.toggle("hidden", !!user);
-  document.getElementById("adminPanel").classList.toggle("hidden", !user);
-  document.getElementById("listPanel").classList.toggle("hidden", !user);
-  document.getElementById("attendancePanel").classList.toggle("hidden", !user);
-  if(user){ loadAnnouncements(); loadAttendanceSetup(); } else if(unsub){unsub();unsub=null}
+  const teacher=!!user && user.email===ADMIN_EMAIL;
+  document.getElementById("loginPanel").classList.toggle("hidden", teacher);
+  for(const id of ['adminPanel','listPanel','attendancePanel','exportPanel','passwordPanel'])document.getElementById(id).classList.toggle('hidden',!teacher);
+  if(teacher){status('loginStatus','');loadAnnouncements();loadAttendanceSetup();loadPastExportSessions();}
+  else{if(unsub){unsub();unsub=null;}selectedExportSessions.clear();pastExportSessions=[];loadedAttendanceRows=[];selectedAttendanceSession=null;exportBusy=false;document.getElementById('exportSessionList').textContent='Sign in to load sessions.';document.getElementById('exportSelectionCount').textContent='0 selected';document.getElementById('downloadSessionsButton').disabled=true;document.querySelector('#attendanceTable tbody').innerHTML='<tr><td colspan="6">Choose a session and click Load Attendance.</td></tr>';document.getElementById('attendanceSummary').innerHTML='';status('exportStatus','');document.getElementById('teacherPasswordForm').reset();status('passwordStatus','');if(user)status('loginStatus','Please sign in with the teacher Admin account. The EXCO password does not grant Admin access.');}
 });
 
-window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm; window.loadAttendanceAfterDate=loadAttendanceAfterDate; window.downloadAttendanceCsv=downloadAttendanceCsv; window.loadAttendanceSetup=loadAttendanceSetup; window.loadSelectedAttendance=loadSelectedAttendance; window.renderAttendanceEditor=renderAttendanceEditor; window.saveAttendanceRecord=saveAttendanceRecord;
+window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm; window.loadAttendanceSetup=loadAttendanceSetup; window.loadSelectedAttendance=loadSelectedAttendance; window.renderAttendanceEditor=renderAttendanceEditor; window.saveAttendanceRecord=saveAttendanceRecord;
 </script>
 </body>
 </html>
