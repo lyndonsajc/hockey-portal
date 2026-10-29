@@ -302,7 +302,7 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
   </section>
 
   <div class="quick-actions">
-    <a class="btn" href="https://sites.google.com/moe.edu.sg/saintshockey/attendance" target="_blank" rel="noopener noreferrer">Take Attendance</a>
+    <a class="btn" href="https://saintshockeyschedule.vercel.app/attendance.html" target="_self">Take Attendance</a>
     <button class="btn secondary" onclick="loadSchedule()">Refresh</button>
     <button class="btn secondary" onclick="window.print()">Print</button>
   </div>
@@ -426,7 +426,7 @@ function renderSchedule(){
           <div class="info"><span>Coach</span><span>${escapeHtml(item.coach||"TBC")}</span></div>
           <div class="info"><span>TIC</span><span>${escapeHtml(item.tic||"TBC")}</span></div>
           <div class="info"><span>Standby</span><span>${escapeHtml(item.standby||"-")}</span></div>
-          <div class="card-actions"><a class="small-btn" href="${makeMapLink(item)}" target="_blank">Map</a><a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">Add</a><a class="small-btn" href="https://sites.google.com/moe.edu.sg/saintshockey/attendance" target="_blank" rel="noopener noreferrer">Attendance</a></div>
+          <div class="card-actions"><a class="small-btn" href="${makeMapLink(item)}" target="_blank">Map</a><a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">Add</a><a class="small-btn" href="https://saintshockeyschedule.vercel.app/attendance.html" target="_self">Attendance</a></div>
         </article>
       `).join("")}
     </div>
