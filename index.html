@@ -382,6 +382,8 @@ function rowsToScheduleObjects(rows){
   }).filter(item=>item.date);
 }
 
+function makeAttendanceLink(item){return "https://saintshockeyschedule.vercel.app/attendance.html?session="+encodeURIComponent(item.id);}
+
 function makeMapLink(item){return item.mapLink || fallbackMapLinks[item.venue] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.venue||"")}`}
 
 function makeCalendarLink(item){
@@ -426,7 +428,7 @@ function renderSchedule(){
           <div class="info"><span>Coach</span><span>${escapeHtml(item.coach||"TBC")}</span></div>
           <div class="info"><span>TIC</span><span>${escapeHtml(item.tic||"TBC")}</span></div>
           <div class="info"><span>Standby</span><span>${escapeHtml(item.standby||"-")}</span></div>
-          <div class="card-actions"><a class="small-btn" href="${makeMapLink(item)}" target="_blank">Map</a><a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">Add</a><a class="small-btn" href="https://saintshockeyschedule.vercel.app/attendance.html" target="_self">Attendance</a></div>
+          <div class="card-actions"><a class="small-btn" href="${makeMapLink(item)}" target="_blank">Map</a><a class="small-btn" href="${makeCalendarLink(item)}" target="_blank">Add</a><a class="small-btn" href="${makeAttendanceLink(item)}" target="_self">Attendance</a></div>
         </article>
       `).join("")}
     </div>

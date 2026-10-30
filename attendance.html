@@ -608,6 +608,16 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
     return response.text();
   }
 
+  function singaporeToday(){const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const value=type=>parts.find(p=>p.type===type).value;return `${value('year')}-${value('month')}-${value('day')}`;}
+  function chooseDefaultSession(items,requestedId,today=singaporeToday()){
+    const requested=items.find(s=>s.id===requestedId);
+    if(requested)return requested;
+    return items.find(s=>sessionIsoDate(s)===today)
+      ||items.find(s=>sessionIsoDate(s)>today)
+      ||items.filter(s=>sessionIsoDate(s)&&sessionIsoDate(s)<today).at(-1)
+      ||items[0]||null;
+  }
+
   async function loadSchedule(){
     const csvText=await fetchCsv(SCHEDULE_CSV_URL);
     sessions=rowsToScheduleObjects(csvToRows(csvText)).filter(isTodayOrFuture).sort((a,b)=>(scheduleDateObject(a.date)||new Date(9999,0,1))-(scheduleDateObject(b.date)||new Date(9999,0,1)));
@@ -615,7 +625,7 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
     const params=new URLSearchParams(window.location.search);
     const sessionParam=params.get("session");
     select.innerHTML=sessions.length?sessions.map(s=>`<option value="${s.id}">${escapeHtml(s.label)}</option>`).join(""):`<option value="">No upcoming sessions</option>`;
-    if(sessionParam && sessions.some(s=>s.id===sessionParam))select.value=sessionParam;
+    select.value=chooseDefaultSession(sessions,sessionParam)?.id||"";
 
   }
 
