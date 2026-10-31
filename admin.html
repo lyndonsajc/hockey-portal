@@ -100,41 +100,19 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
 <h2>Attendance Management</h2>
 
 <div class="attendance-controls">
-  <div>
-    <label>Session</label>
-    <select id="attendanceSessionSelect">
-      <option value="">Loading sessions...</option>
-    </select>
-  </div>
-  <div>
-    <label>Search Student / Class</label>
-    <input id="attendanceSearch" placeholder="Type name or class" oninput="renderAttendanceEditor()">
-  </div>
+<div><label for="reportStart">From date</label><input id="reportStart" type="date"></div>
+<div><label for="reportEnd">To date</label><input id="reportEnd" type="date"></div>
+<div><label for="reportStudent">Student</label><select id="reportStudent"><option value="">All students</option></select></div>
+<div><label for="reportStatus">Attendance status</label><select id="reportStatus"><option value="">All statuses</option><option>Present</option><option>Absent</option><option>MC/Parent Letter</option><option>Unmarked</option></select></div>
+<div><label for="reportView">View</label><select id="reportView"><option value="records">Attendance records</option><option value="summary">Summary by student</option></select></div>
+<div><label for="attendanceSearch">Search student / class</label><input id="attendanceSearch" placeholder="Type name or class"></div>
 </div>
-
-<button class="primary" onclick="loadSelectedAttendance()">Load Attendance</button>
-
-
-<div id="attendanceStatus" class="status"></div>
+<button id="loadReport" class="primary" type="button">Load attendance</button>
+<button id="reportCsv" type="button" disabled>Download filtered CSV</button>
+<p class="export-note">Select the same From and To date to amend status and reason in the boxes below. Each row has its own Save button. Date ranges and summaries show saved records only. Present % = Present ÷ marked records, including MC/PL.</p>
+<div id="attendanceStatus" class="status" role="status"></div>
 <div id="attendanceSummary"></div>
-
-<div class="table-wrap">
-  <table id="attendanceTable">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Class</th>
-        <th>Group</th>
-        <th>Status</th>
-        <th>Reason</th>
-        <th>Save</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td colspan="6">Choose a session and click Load Attendance.</td></tr>
-    </tbody>
-  </table>
-</div>
+<div class="table-wrap"><table id="attendanceTable"><thead></thead><tbody><tr><td>Choose dates and load attendance.</td></tr></tbody></table></div>
 </section>
 
 
@@ -162,7 +140,7 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, onSnapshot, serverTimestamp, getDocs, getDocsFromServer, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, writeBatch, collection, addDoc, deleteDoc, doc, setDoc, onSnapshot, serverTimestamp, getDocs, getDocsFromServer, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 const firebaseConfig = {
@@ -281,182 +259,81 @@ async function fetchCsv(url){
   return response.text();
 }
 
+let reportSessions=[],reportTeacherRecords=[],reportLoaded=false,reportSingleDate=false,reportEpoch=0,reportSaving=false;
+const ATTENDANCE_STATUSES=['Unmarked','Present','Absent','MC/Parent Letter'];
 async function loadAttendanceSetup(){
-  const sessionSelect=document.getElementById("attendanceSessionSelect");
-  if(!sessionSelect)return;
+  const today=singaporeToday();document.getElementById('reportStart').value=today;document.getElementById('reportEnd').value=today;
+  status('attendanceStatus','Loading training sessions…');
   try{
-    sessionSelect.innerHTML='<option value="">Loading sessions...</option>';
-    const [scheduleCsv, studentCsv]=await Promise.all([fetchCsv(SCHEDULE_CSV_URL), fetchCsv(STUDENT_CSV_URL)]);
-    attendanceSessions=rowsToScheduleObjects(csvToRows(scheduleCsv));
-    attendanceStudents=rowsToStudentObjects(csvToRows(studentCsv));
-    sessionSelect.innerHTML=attendanceSessions.length
-      ? attendanceSessions.map(s=>`<option value="${s.id}">${esc(s.label)}</option>`).join("")
-      : '<option value="">No sessions found</option>';
-    status("attendanceStatus", `Loaded ${attendanceSessions.length} sessions and ${attendanceStudents.length} students.`);
-  }catch(e){
-    console.error(e);
-    status("attendanceStatus","Unable to load sessions/students from Google Sheets.");
-  }
+    const [schedule,roster,saved,teacher]=await Promise.all([fetchCsv(SCHEDULE_CSV_URL).then(t=>rowsToScheduleObjects(csvToRows(t))).catch(()=>[]),fetchCsv(STUDENT_CSV_URL).then(t=>rowsToStudentObjects(csvToRows(t))).catch(()=>[]),getDocsFromServer(collection(db,'attendanceSessions')),getDocsFromServer(collection(db,'teacherAttendanceRecords'))]);
+    if(!teacherSignedIn())return;
+    attendanceStudents=roster;reportTeacherRecords=teacher.docs.map(d=>({...d.data(),id:d.id}));
+    reportSessions=combineExportSessions(schedule,saved.docs.map(d=>({...d.data(),id:d.id})),reportTeacherRecords);
+    attendanceSessions=reportSessions;updateStudentOptions([]);status('attendanceStatus','Choose a date range and load attendance.');
+  }catch(e){console.error(e);status('attendanceStatus','Unable to load sessions. Refresh after checking your connection.');}
 }
-
+function updateStudentOptions(rows){
+  const select=document.getElementById('reportStudent'),value=select.value,map=new Map();
+  for(const r of rows)map.set(String(r.studentId),r);for(const r of attendanceStudents)if(!map.has(r.id))map.set(r.id,{studentId:r.id,...r});
+  select.innerHTML='<option value="">All students</option>'+[...map.values()].sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(r=>`<option value="${esc(r.studentId)}">${esc(r.name)} (${esc(r.className||r.group||'')})</option>`).join('');
+  select.value=[...select.options].some(o=>o.value===value)?value:'';
+}
+function invalidateReport(){if(reportSaving)return;reportEpoch++;reportLoaded=false;loadedAttendanceRows=[];document.getElementById('reportCsv').disabled=true;document.querySelector('#attendanceTable tbody').innerHTML='<tr><td>Load attendance for the selected dates.</td></tr>';document.getElementById('attendanceSummary').innerHTML='';}
 async function loadSelectedAttendance(){
-  const sessionId=document.getElementById("attendanceSessionSelect").value;
-  selectedAttendanceSession=attendanceSessions.find(s=>s.id===sessionId)||null;
-  if(!selectedAttendanceSession){
-    status("attendanceStatus","Choose a session first.");
-    return;
-  }
-
+  if(!teacherSignedIn()||reportSaving)return;
+  const start=document.getElementById('reportStart').value,end=document.getElementById('reportEnd').value;
+  if(!start||!end||start>end){status('attendanceStatus','Choose a valid From and To date.');return;}
+  const epoch=++reportEpoch,uid=auth.currentUser.uid;reportLoaded=false;document.getElementById('reportCsv').disabled=true;document.getElementById('loadReport').disabled=true;
+  document.querySelector('#attendanceTable tbody').innerHTML='<tr><td>Loading…</td></tr>';status('attendanceStatus','Loading saved attendance…');
   try{
-    status("attendanceStatus","Loading attendance records...");
-    const snap=await getDocs(collection(db,"attendance",sessionId,"records"));
-    const records={};
-    snap.docs.forEach(d=>records[d.id]=d.data());
-
-    loadedAttendanceRows=attendanceStudents.map(student=>{
-      const record=records[student.id]||{};
-      return {
-        studentId:student.id,
-        name:student.name,
-        className:student.className,
-        group:student.group,
-        gender:student.gender,
-        status:record.status||"Unmarked",
-        reason:record.reason||"",
-        sessionId:selectedAttendanceSession.id,
-        sessionLabel:selectedAttendanceSession.label,
-        date:selectedAttendanceSession.date,
-        day:selectedAttendanceSession.day,
-        start:selectedAttendanceSession.start,
-        end:selectedAttendanceSession.end,
-        venue:selectedAttendanceSession.venue,
-        remarks:selectedAttendanceSession.remarks,
-        updatedAt:record.updatedAt||""
-      };
-    });
-
-    renderAttendanceEditor();
-    status("attendanceStatus",`Loaded attendance for ${selectedAttendanceSession.label}.`);
-  }catch(e){
-    console.error(e);
-    status("attendanceStatus","Unable to load attendance. Check Firebase rules.");
-  }
+    const teacher=await getDocsFromServer(collection(db,'teacherAttendanceRecords'));
+    const teacherRows=teacher.docs.map(d=>({...d.data(),id:d.id}));
+    const sessions=combineExportSessions(reportSessions,[],teacherRows).filter(r=>r.normalisedDate>=start&&r.normalisedDate<=end);
+    const rows=[];
+    for(const session of sessions){
+      const snap=await getDocsFromServer(collection(db,'attendance',session.id,'records'));
+      const merged=mergeSessionRecords(session,teacherRows,snap.docs.map(d=>({...d.data(),id:d.id,studentId:d.id})));
+      rows.push(...merged.map(r=>({...r,saved:true})));
+      // Show current roster gaps only for single-date editing, without treating them as historical records.
+      if(start===end){const ids=new Set(merged.map(r=>String(r.studentId)));for(const student of attendanceStudents)if(!ids.has(student.id))rows.push({date:session.normalisedDate,sessionId:session.id,sessionLabel:session.label,studentId:student.id,name:student.name,className:student.className,group:student.group,gender:student.gender,status:'Unmarked',reason:'',saved:false});}
+    }
+    if(epoch!==reportEpoch||auth.currentUser?.uid!==uid||!teacherSignedIn())return;
+    loadedAttendanceRows=rows;reportSessions=combineExportSessions(reportSessions,[],teacherRows);reportSingleDate=start===end;reportLoaded=true;updateStudentOptions(rows);renderAttendanceEditor();
+    status('attendanceStatus',`${sessions.length} session(s), ${rows.filter(r=>r.saved).length} saved record(s).${reportSingleDate?' Editable boxes are available in Attendance records view. Unsaved rows use the current roster.':''}`);
+  }catch(e){console.error(e);if(epoch===reportEpoch){loadedAttendanceRows=[];reportLoaded=false;document.querySelector('#attendanceTable tbody').innerHTML='<tr><td>Attendance could not be loaded.</td></tr>';status('attendanceStatus','Loading failed. Check your connection and teacher access, then try again.');}}
+  finally{document.getElementById('loadReport').disabled=false;}
 }
-
+function filteredAttendanceRows(){const student=document.getElementById('reportStudent').value,filter=document.getElementById('reportStatus').value,search=document.getElementById('attendanceSearch').value.trim().toLowerCase();return loadedAttendanceRows.filter(r=>(!student||String(r.studentId)===student)&&(!filter||r.status===filter)&&[r.name,r.className,r.group].join(' ').toLowerCase().includes(search));}
+function attendanceTotals(rows){const count=status=>rows.filter(r=>r.status===status).length,present=count('Present'),absent=count('Absent'),mc=count('MC/Parent Letter'),marked=present+absent+mc;return {total:rows.length,present,absent,mc,unmarked:rows.length-marked,percent:marked?(100*present/marked).toFixed(1)+'%':'N/A'};}
+function studentSummaries(rows){const map=new Map();for(const r of rows){const key=String(r.studentId);if(!map.has(key))map.set(key,[]);map.get(key).push(r);}return [...map.values()].map(rs=>({...rs[0],...attendanceTotals(rs)})).sort((a,b)=>String(a.name).localeCompare(String(b.name)));}
 function renderAttendanceEditor(){
-  const tbody=document.querySelector("#attendanceTable tbody");
-  const summary=document.getElementById("attendanceSummary");
-  if(!tbody)return;
-
-  const search=(document.getElementById("attendanceSearch")?.value||"").toLowerCase();
-  const filtered=loadedAttendanceRows.filter(r=>
-    r.name.toLowerCase().includes(search) ||
-    r.className.toLowerCase().includes(search) ||
-    r.group.toLowerCase().includes(search)
-  );
-
-  const present=loadedAttendanceRows.filter(r=>r.status==="Present").length;
-  const absent=loadedAttendanceRows.filter(r=>r.status==="Absent").length;
-  const mc=loadedAttendanceRows.filter(r=>r.status==="MC/Parent Letter").length;
-  const unmarked=loadedAttendanceRows.filter(r=>!["Present","Absent","MC/Parent Letter"].includes(r.status)).length;
-
-  summary.innerHTML=`
-    <span class="count-pill">Total: ${loadedAttendanceRows.length}</span>
-    <span class="count-pill">Present: ${present}</span>
-    <span class="count-pill">Absent: ${absent}</span>
-    <span class="count-pill">MC/PL: ${mc}</span>
-    <span class="count-pill">Unmarked: ${unmarked}</span>
-  `;
-
-  if(!filtered.length){
-    tbody.innerHTML='<tr><td colspan="6">No matching students.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML=filtered.map(r=>`
-    <tr>
-      <td>${esc(r.name)}</td>
-      <td>${esc(r.className)}</td>
-      <td>${esc(r.group)}</td>
-      <td>
-        <select class="attendance-status" id="status-${r.studentId}">
-          <option value="Unmarked" ${r.status==="Unmarked"?"selected":""}>Unmarked</option>
-          <option value="Present" ${r.status==="Present"?"selected":""}>Present</option>
-          <option value="Absent" ${r.status==="Absent"?"selected":""}>Absent</option>
-          <option value="MC/Parent Letter" ${r.status==="MC/Parent Letter"?"selected":""}>MC/PL</option>
-        </select>
-      </td>
-      <td><input class="reason-box" id="reason-${r.studentId}" value="${esc(r.reason)}" placeholder="Reason"></td>
-      <td><button class="primary" onclick="saveAttendanceRecord('${r.studentId}')">Save</button></td>
-    </tr>
-  `).join("");
+  if(!reportLoaded)return;
+  const rows=filteredAttendanceRows(),summaryMode=document.getElementById('reportView').value==='summary',data=summaryMode?rows.filter(r=>r.saved):rows,t=attendanceTotals(data),table=document.getElementById('attendanceTable');
+  document.getElementById('attendanceSummary').innerHTML=`<span class="count-pill">Records: ${t.total}</span><span class="count-pill">Present: ${t.present}</span><span class="count-pill">Absent: ${t.absent}</span><span class="count-pill">MC/PL: ${t.mc}</span><span class="count-pill">Unmarked: ${t.unmarked}</span><span class="count-pill">Present: ${t.percent}</span>`;
+  document.getElementById('reportCsv').disabled=!data.length;
+  if(summaryMode){table.querySelector('thead').innerHTML='<tr><th>Student</th><th>Class</th><th>Records</th><th>Present</th><th>Absent</th><th>MC/PL</th><th>Unmarked</th><th>Present %</th></tr>';table.querySelector('tbody').innerHTML=studentSummaries(data).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.className)}</td><td>${r.total}</td><td>${r.present}</td><td>${r.absent}</td><td>${r.mc}</td><td>${r.unmarked}</td><td>${r.percent}</td></tr>`).join('')||'<tr><td colspan="8">No saved records match the filters.</td></tr>';return;}
+  table.querySelector('thead').innerHTML='<tr><th>Date / Session</th><th>Student</th><th>Class / Team</th><th>Status</th><th>Reason</th><th>Save</th></tr>';
+  table.querySelector('tbody').innerHTML=rows.map(r=>{const i=loadedAttendanceRows.indexOf(r);return `<tr><td>${esc(r.date)}<small style="display:block">${esc(r.sessionLabel)}</small></td><td>${esc(r.name)}${!r.saved?'<small style="display:block">Current roster, not yet saved</small>':''}</td><td>${esc(r.className)}<br>${esc(r.group)}</td><td>${reportSingleDate?`<select aria-label="Status for ${esc(r.name)}" id="report-status-${i}" ${reportSaving?'disabled':''}>${ATTENDANCE_STATUSES.map(v=>`<option ${v===(r.draftStatus??r.status)?'selected':''}>${esc(v)}</option>`).join('')}</select>`:esc(r.status)}</td><td>${reportSingleDate?`<textarea aria-label="Reason for ${esc(r.name)}" id="report-reason-${i}" ${reportSaving?'disabled':''}>${esc(r.draftReason??r.reason??'')}</textarea>`:esc(r.reason)}</td><td>${reportSingleDate?`<button class="primary" data-save-row="${i}" ${reportSaving?'disabled':''}>Save</button>`:'Select a single date to edit'}</td></tr>`;}).join('')||'<tr><td colspan="6">No matching records or sessions.</td></tr>';
 }
-
-async function saveAttendanceRecord(studentId){
-  if(!selectedAttendanceSession){
-    status("attendanceStatus","Load a session first.");
-    return;
-  }
-
-  const row=loadedAttendanceRows.find(r=>r.studentId===studentId);
-  if(!row){
-    status("attendanceStatus","Student record not found.");
-    return;
-  }
-
-  const newStatus=document.getElementById(`status-${studentId}`).value;
-  const newReason=document.getElementById(`reason-${studentId}`).value.trim();
-  const now=new Date().toISOString();
-
-  const attendancePayload={
-    studentId,
-    name:row.name,
-    className:row.className,
-    group:row.group,
-    gender:row.gender,
-    status:newStatus,
-    reason:newReason,
-    sessionId:selectedAttendanceSession.id,
-    sessionLabel:selectedAttendanceSession.label,
-    updatedAt:now,
-    timestamp:serverTimestamp()
-  };
-
-  const teacherPayload={
-    sessionId:selectedAttendanceSession.id,
-    sessionLabel:selectedAttendanceSession.label,
-    date:selectedAttendanceSession.date||"",
-    day:selectedAttendanceSession.day||"",
-    start:selectedAttendanceSession.start||"",
-    end:selectedAttendanceSession.end||"",
-    venue:selectedAttendanceSession.venue||"",
-    remarks:selectedAttendanceSession.remarks||"",
-    studentId,
-    name:row.name,
-    className:row.className,
-    group:row.group,
-    gender:row.gender,
-    status:newStatus,
-    reason:newReason,
-    updatedAt:now,
-    timestamp:serverTimestamp()
-  };
-
+async function saveAttendanceRecord(index){
+  if(!teacherSignedIn()||!reportLoaded||!reportSingleDate||reportSaving)return;
+  const row=loadedAttendanceRows[index],session=reportSessions.find(s=>s.id===row?.sessionId);if(!row||!session)return;
+  const newStatus=row.draftStatus??row.status,newReason=(row.draftReason??row.reason??'').trim();if(!ATTENDANCE_STATUSES.includes(newStatus))return;
+  const epoch=reportEpoch,now=new Date().toISOString();reportSaving=true;for(const id of ['reportStart','reportEnd','loadReport'])document.getElementById(id).disabled=true;renderAttendanceEditor();
   try{
-    await setDoc(doc(db,"attendance",selectedAttendanceSession.id,"records",studentId),attendancePayload,{merge:true});
-    await setDoc(doc(db,"teacherAttendanceRecords",`${selectedAttendanceSession.id}_${studentId}`),teacherPayload,{merge:true});
-    row.status=newStatus;
-    row.reason=newReason;
-    row.updatedAt=now;
-    renderAttendanceEditor();
-    status("attendanceStatus",`Saved ${row.name}.`);
-  }catch(e){
-    console.error(e);
-    status("attendanceStatus","Unable to save attendance. Check Firebase rules/admin login.");
-  }
+    const common={studentId:row.studentId,name:row.name||'',className:row.className||'',group:row.group||'',gender:row.gender||'',status:newStatus,reason:newReason,sessionId:session.id,sessionLabel:session.label,sessionDate:session.normalisedDate,updatedAt:now,timestamp:serverTimestamp()};
+    const batch=writeBatch(db);batch.set(doc(db,'attendance',session.id,'records',row.studentId),common,{merge:true});batch.set(doc(db,'teacherAttendanceRecords',`${session.id}_${row.studentId}`),{...common,date:session.date||session.normalisedDate,day:session.day||'',start:session.start||'',end:session.end||'',venue:session.venue||'',remarks:session.remarks||''},{merge:true});await batch.commit();
+    if(epoch!==reportEpoch||!teacherSignedIn())return;row.status=newStatus;row.reason=newReason;row.saved=true;delete row.draftStatus;delete row.draftReason;status('attendanceStatus',`Saved ${row.name} for ${row.date}.`);
+  }catch(e){console.error(e);status('attendanceStatus','Not saved. Check your teacher access and connection, then retry.');}
+  finally{reportSaving=false;for(const id of ['reportStart','reportEnd','loadReport'])document.getElementById(id).disabled=false;if(epoch===reportEpoch)renderAttendanceEditor();}
 }
-
-
+document.getElementById('loadReport').addEventListener('click',loadSelectedAttendance);
+for(const id of ['reportStart','reportEnd'])document.getElementById(id).addEventListener('change',invalidateReport);
+for(const id of ['reportStudent','reportStatus','reportView'])document.getElementById(id).addEventListener('change',renderAttendanceEditor);
+document.getElementById('attendanceSearch').addEventListener('input',renderAttendanceEditor);
+document.getElementById('attendanceTable').addEventListener('input',event=>{const match=event.target.id.match(/^report-(status|reason)-(\d+)$/);if(match){const r=loadedAttendanceRows[Number(match[2])];if(r)r[match[1]==='status'?'draftStatus':'draftReason']=event.target.value;}});
+document.getElementById('attendanceTable').addEventListener('click',event=>{const button=event.target.closest('[data-save-row]');if(button)saveAttendanceRecord(Number(button.dataset.saveRow));});
+document.getElementById('reportCsv').addEventListener('click',()=>{if(!teacherSignedIn()||!reportLoaded)return;const rows=filteredAttendanceRows(),summary=document.getElementById('reportView').value==='summary';let csv;if(summary){const data=studentSummaries(rows.filter(r=>r.saved));csv='\uFEFF'+[['Student','Class','Records','Present','Absent','MC/PL','Unmarked','Present %'],...data.map(r=>[r.name,r.className,r.total,r.present,r.absent,r.mc,r.unmarked,r.percent])].map(row=>row.map(csvCell).join(',')).join('\r\n');}else csv=buildExportCsv(rows.filter(r=>r.saved));const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})),a=document.createElement('a');a.href=url;a.download=`hockey_${summary?'summary':'attendance'}_${document.getElementById('reportStart').value}_${document.getElementById('reportEnd').value}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 
 let loadedAttendanceRows = [];
 
@@ -563,7 +440,7 @@ onAuthStateChanged(auth, user=>{
   document.getElementById("loginPanel").classList.toggle("hidden", teacher);
   for(const id of ['adminPanel','listPanel','attendancePanel','exportPanel','passwordPanel'])document.getElementById(id).classList.toggle('hidden',!teacher);
   if(teacher){status('loginStatus','');loadAnnouncements();loadAttendanceSetup();loadPastExportSessions();}
-  else{if(unsub){unsub();unsub=null;}selectedExportSessions.clear();pastExportSessions=[];loadedAttendanceRows=[];selectedAttendanceSession=null;exportBusy=false;document.getElementById('exportSessionList').textContent='Sign in to load sessions.';document.getElementById('exportSelectionCount').textContent='0 selected';document.getElementById('downloadSessionsButton').disabled=true;document.querySelector('#attendanceTable tbody').innerHTML='<tr><td colspan="6">Choose a session and click Load Attendance.</td></tr>';document.getElementById('attendanceSummary').innerHTML='';status('exportStatus','');document.getElementById('teacherPasswordForm').reset();status('passwordStatus','');if(user)status('loginStatus','Please sign in with the teacher Admin account. The EXCO password does not grant Admin access.');}
+  else{reportEpoch++;reportLoaded=false;if(unsub){unsub();unsub=null;}selectedExportSessions.clear();pastExportSessions=[];loadedAttendanceRows=[];selectedAttendanceSession=null;exportBusy=false;document.getElementById('exportSessionList').textContent='Sign in to load sessions.';document.getElementById('exportSelectionCount').textContent='0 selected';document.getElementById('downloadSessionsButton').disabled=true;document.querySelector('#attendanceTable tbody').innerHTML='<tr><td colspan="6">Choose a session and click Load Attendance.</td></tr>';document.getElementById('attendanceSummary').innerHTML='';status('exportStatus','');document.getElementById('teacherPasswordForm').reset();status('passwordStatus','');if(user)status('loginStatus','Please sign in with the teacher Admin account. The EXCO password does not grant Admin access.');}
 });
 
 window.login=login; window.logout=logout; window.addAnnouncement=addAnnouncement; window.deleteAnnouncement=deleteAnnouncement; window.clearAnnouncementForm=clearAnnouncementForm; window.loadAttendanceSetup=loadAttendanceSetup; window.loadSelectedAttendance=loadSelectedAttendance; window.renderAttendanceEditor=renderAttendanceEditor; window.saveAttendanceRecord=saveAttendanceRecord;
