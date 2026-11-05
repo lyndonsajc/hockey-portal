@@ -329,8 +329,8 @@ header.saints-header .saints-tagline{margin:3px 0 0;font-family:inherit;font-siz
   </section>
 
   <div class="quick-actions">
-    <a class="btn" target="_top" href="https://sites.google.com/moe.edu.sg/saintshockey/schedule">Full Schedule</a>
-    <a class="btn secondary" target="_top" href="https://sites.google.com/moe.edu.sg/saintshockey/attendance">Take Attendance</a>
+    <a class="btn" target="_self" href="https://saintshockeyschedule.vercel.app/index.html">Full Schedule</a>
+    <a class="btn secondary" target="_self" href="https://saintshockeyschedule.vercel.app/attendance.html">Take Attendance</a>
   </div>
   <section class="overview-grid">
     <div><h2 class="term-title">Next Session</h2><div id="scheduleContainer" aria-live="polite">Loading schedule...</div></div>
@@ -466,7 +466,7 @@ async function loadSchedule(){
       const count=status=>records.filter(r=>r.status===status).length;
       const present=count('Present'),absent=count('Absent'),mc=count('MC/Parent Letter');
       const unmarked=roster?Math.max(0,roster.size-present-absent-mc):null;
-      box.innerHTML=`<article class="card"><div class="date">${escapeHtml(latest.date)}</div><div class="info"><span>${escapeHtml(latest.day)}</span><span>${escapeHtml(latest.start)}–${escapeHtml(latest.end)}</span></div><div class="info"><span>Venue</span><span>${escapeHtml(latest.venue)}</span></div><div class="attendance-counts">${[[present,'Present'],[absent,'Absent'],[mc,'MC / Parent Letter'],[unmarked??'—','Unmarked']].map(([n,label])=>`<div class="attendance-count"><strong>${n}</strong><span>${label}</span></div>`).join('')}</div><p class="overview-note">${roster?`${present+absent+mc} of ${roster.size} students marked`:'Roster unavailable. Unmarked total cannot be calculated.'}</p><a class="small-btn" target="_top" href="https://sites.google.com/moe.edu.sg/saintshockey/attendance">Open Attendance</a></article>`;
+      box.innerHTML=`<article class="card"><div class="date">${escapeHtml(latest.date)}</div><div class="info"><span>${escapeHtml(latest.day)}</span><span>${escapeHtml(latest.start)}–${escapeHtml(latest.end)}</span></div><div class="info"><span>Venue</span><span>${escapeHtml(latest.venue)}</span></div><div class="attendance-counts">${[[present,'Present'],[absent,'Absent'],[mc,'MC / Parent Letter'],[unmarked??'—','Unmarked']].map(([n,label])=>`<div class="attendance-count"><strong>${n}</strong><span>${label}</span></div>`).join('')}</div><p class="overview-note">${roster?`${present+absent+mc} of ${roster.size} students marked`:'Roster unavailable. Unmarked total cannot be calculated.'}</p><a class="small-btn" target="_self" href="https://saintshockeyschedule.vercel.app/attendance.html?session=${encodeURIComponent(latest.id)}">Open Attendance</a></article>`;
     },err=>{console.error(err);box.innerHTML='<div class="error">Unable to load attendance. Check access permissions.</div>';});
   }catch(err){console.error(err);container.innerHTML='<div class="error">Unable to load schedule. Refresh the page to try again.</div>';box.innerHTML='<div class="error">Attendance overview unavailable while schedule cannot be loaded.</div>';if(attendanceUnsubscribe){attendanceUnsubscribe();attendanceUnsubscribe=null;}}
 }
